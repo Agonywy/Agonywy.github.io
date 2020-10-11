@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.1">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.4.1">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.4.1">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.1" color="#222">
+  <link rel="alternate" href="/atom.xml" title="如你所是" type="application/atom+xml">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.1">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.4.1',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="首先我们先通过一张图来看一下，运行时数据区到底长什么样呢？他内部到底有什么乾坤？我们一起来慢慢揭开他的神秘面纱。当然，JVM运行时数据区那一定是面试重中之重呀！">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JVM之运行时数据区">
+<meta property="og:url" content="https://agonywy.github.io/2019/10/19/JVM%E4%B9%8B%E5%88%9D%E8%AF%86Java%E8%99%9A%E6%8B%9F%E6%9C%BA/index.html">
+<meta property="og:site_name" content="如你所是">
+<meta property="og:description" content="首先我们先通过一张图来看一下，运行时数据区到底长什么样呢？他内部到底有什么乾坤？我们一起来慢慢揭开他的神秘面纱。当然，JVM运行时数据区那一定是面试重中之重呀！">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/Agonywy/picGo/master/img/RuntimeDataArea.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/Agonywy/picGo/master/img/JVStack.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/Agonywy/picGo/master/img/.png">
+<meta property="article:published_time" content="2019-10-19T13:59:37.000Z">
+<meta property="article:modified_time" content="2019-10-21T20:01:26.000Z">
+<meta property="article:author" content="Agonywy">
+<meta property="article:tag" content="Java虚拟机">
+<meta property="article:tag" content="JVM">
+<meta property="article:tag" content="运行时数据区">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/Agonywy/picGo/master/img/RuntimeDataArea.jpg">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>JVM之运行时数据区 | 如你所是</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+  
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">如你所是</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Agonywy</p>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/Agonywy" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://Agonywy.github.io/2019/10/19/JVM%E4%B9%8B%E5%88%9D%E8%AF%86Java%E8%99%9A%E6%8B%9F%E6%9C%BA/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=990876467,425290997&fm=26&gp=0.jpg">
+      <meta itemprop="name" content="Agonywy">
+      <meta itemprop="description" content="我爱你,因为你是你，我爱你如你所是">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="如你所是">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          JVM之运行时数据区
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-10-19 21:59:37" itemprop="dateCreated datePublished" datetime="2019-10-19T21:59:37+08:00">2019-10-19</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java%E8%99%9A%E6%8B%9F%E6%9C%BA/" itemprop="url" rel="index">
+                    <span itemprop="name">Java虚拟机</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.4k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>4 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="首先我们先通过一张图来看一下，运行时数据区到底长什么样呢？他内部到底有什么乾坤？我们一起来慢慢揭开他的神秘面纱。当然，JVM运行时数据区那一定是面试重中之重呀！"><a href="#首先我们先通过一张图来看一下，运行时数据区到底长什么样呢？他内部到底有什么乾坤？我们一起来慢慢揭开他的神秘面纱。当然，JVM运行时数据区那一定是面试重中之重呀！" class="headerlink" title="首先我们先通过一张图来看一下，运行时数据区到底长什么样呢？他内部到底有什么乾坤？我们一起来慢慢揭开他的神秘面纱。当然，JVM运行时数据区那一定是面试重中之重呀！"></a>首先我们先通过一张图来看一下，运行时数据区到底长什么样呢？他内部到底有什么乾坤？我们一起来慢慢揭开他的神秘面纱。当然，JVM运行时数据区那一定是面试重中之重呀！</h3><a id="more"></a><img src="https://raw.githubusercontent.com/Agonywy/picGo/master/img/RuntimeDataArea.jpg" style="zoom:50%;">
+
+<h3 id="接下来我们从面试的角度来深入分析，彻底打败这个纸老虎！"><a href="#接下来我们从面试的角度来深入分析，彻底打败这个纸老虎！" class="headerlink" title="接下来我们从面试的角度来深入分析，彻底打败这个纸老虎！"></a>接下来我们从面试的角度来深入分析，彻底打败这个纸老虎！</h3><h3 id="1-程序计数器（PC）"><a href="#1-程序计数器（PC）" class="headerlink" title="1.程序计数器（PC）"></a>1.程序计数器（PC）</h3><ul>
+<li><p><strong>PC是什么？</strong></p>
+<ul>
+<li>程序计数器是一块较小的内存单元，他可以看成是当前线程所执行的字节码的行号指示器，用于存放下一条指令所在单元的地址。</li>
+<li>JAVA代码编译后的字节码在未经过JIT（实时编译器）编译前，其执行方式是通过“字节码解释器”进行解释执行。字节码解释器工作时就是通过改变这个计数器的值来选取下一条需要执行的字节码指令。</li>
+</ul>
+</li>
+<li><p><strong>为什么需要PC？</strong></p>
+<ul>
+<li>JVM的多线程是通过获取CPU时间片来执行的。也就是说，某个线程在执行过程中会因为时间片耗尽而被挂起，而另一个线程获取到时间片开始执行。当被挂起的线程重新获取到时间片的时候，它要想从被挂起的地方继续执行，就必须知道它上次执行到哪个位置，在JVM中，通过程序计数器来记录某个线程的字节码执行位置。</li>
+<li>因此，程序计数器是具备线程隔离的特性，也就是说，每个线程工作时都有属于自己的独立计数器。 即程序计数器是线程私有的。</li>
+</ul>
+</li>
+<li><p><strong>特点</strong></p>
+<ul>
+<li><p>线程隔离性，每个线程工作时都有属于自己的独立计数器，是线程私有的。</p>
+</li>
+<li><p>内存区域中唯一一个没有规定任何OutOfMemoryError情况的区域 。当Java程序在执行Java方法的时候，程序计数器记录的是当前执行代码的指令地址，当Java程序正在执行Native方法，程序计数器则为空（Undefined），程序计数器是不会抛出OOM异常的 。</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="2-Java虚拟机栈"><a href="#2-Java虚拟机栈" class="headerlink" title="2.Java虚拟机栈"></a>2.Java虚拟机栈</h3><ul>
+<li><p><strong>虚拟机栈是什么？</strong></p>
+<ul>
+<li>作用于方法执行的一块内存区域，每一个方法执行会在虚拟机栈中创建一个栈帧。</li>
+<li>每一个方法从调用到执行完成的过程，就对应着一个栈帧在虚拟机栈中入栈到出栈的过程。</li>
+<li>一般将栈帧内存的大小称为宽度，而栈帧的数量被称为虚拟机栈的深度 </li>
+</ul>
+</li>
+<li><p><strong>分析栈帧？</strong></p>
+<ul>
+<li><p>是用于支持虚拟机进行方法调用和方法执行的数据结构，它是虚拟机运行时</p>
+<p>数据区中的虚拟机栈（Virtual Machine Stack）的栈元素，先进后出。 </p>
+</li>
+<li><p>栈帧用于存放局部变量表，操作数栈，动态链接，方法出口等信息。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>这样我们分析后，就可以在脑海中构建出下面这幅栈帧图啦！</strong></p>
+<img src="https://raw.githubusercontent.com/Agonywy/picGo/master/img/JVStack.jpg" style="zoom: 50%;">
+</li>
+<li><p><strong>分析局部变量表？</strong></p>
+<ul>
+<li><p>是一组逻辑连续的变量值存储空间，用于存放方法参数和方法内部定义的局部变量。局部变量表存放了编译期可知的各种基本数据类型(boolean，byte，char，short，int，float，long，double)以及对象引用（reference）</p>
+</li>
+<li><p>因为各种基本数据类型长度固定，故而局部变量表的空间在编译期就能确定 。 变量表里存放了变量名、类型，并不是只有类型。 </p>
+</li>
+<li><p>虚拟机如何调用局部变量表呢？局部变量表是有索引的，就像数组一样。从0开始，到表的最大索引，也就是Slot的数量-1。</p>
+</li>
+<li><p>要注意的是，方法参数的个数 + 局部变量的个数 ≠ Slot的数量。因为Slot的空间是可以复用的，当pc计数器的值已经超出了某个变量的作用域时，下一个变量不必使用新的Slot空间，可以去覆盖前面那个空间。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>分析操作数栈？</strong></p>
+<ul>
+<li>操作数栈和局部变量表在访问方式上存在着较大差异，操作数栈并非采用访问索引的方式来进行数据访问的，而是通过标准的入栈和出栈操作来完成一次数据访问。</li>
+<li>简单来说，操作数栈就是JVM执行引擎的一个工作区，当一个方法被调用的时候，一个新的栈帧也会随之被创建出来，但这个时候栈帧中的操作数栈却是空的，只有方法在执行的过程中，才会有各种各样的字节码指令往操作数栈中执行入栈和出栈操作。</li>
+<li>比如在一个方法内部需要执行一个简单的加法运算时，首先需要从操作数栈中将需要执行运算的两个数值出栈，待运算执行完成后，再将运算结果入栈。</li>
+</ul>
+</li>
+<li><p><strong>特点？</strong></p>
+<ul>
+<li><p>虚拟机栈同样具有线程隔离性，是线程私有的内存区域。</p>
+</li>
+<li><p>虚拟机栈的声明周期和线程是相同的。</p>
+</li>
+<li><p>如果线程请求的栈深度大于虚拟机所允许的深度，将会抛出栈溢出(<strong>StackOverﬂowError</strong>)异常 。</p>
+</li>
+<li><p>如果虚拟机在扩展栈时，无法申请到足够的空间，则抛出内存溢出(<strong>OutOfMemoryError</strong>)异常 。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* 首先我们模拟一下StackOverﬂowError</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">StackOOM</span></span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> stackLength = <span class="number">1</span>; <span class="comment">//模拟虚拟机栈深度</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">stackLeak</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		stackLength++; <span class="comment">//每调用一次方法,进入一个栈帧,栈深度+1</span></span><br><span class="line">         stackLeak();	<span class="comment">//重复调用，陷入循环，虚拟机栈不断有栈帧入栈</span></span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">        StackOOM oom = <span class="keyword">new</span> StackOOM();	<span class="comment">//创建对象</span></span><br><span class="line">        <span class="keyword">try</span>&#123;</span><br><span class="line">            oom.stackLeak();	<span class="comment">//调用stackLeak()方法</span></span><br><span class="line">        &#125;<span class="keyword">catch</span> (Throwable e)</span><br><span class="line">        	System.out.println(<span class="string">"stack Length:"</span> + oom.stackLength);	<span class="comment">//异常信息中打印栈深度</span></span><br><span class="line">        	<span class="keyword">throw</span> e;</span><br><span class="line">    &#125; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* 接下来我们模拟一下OutOfMemoryError(模拟多线程来实现)</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">StackOOM</span></span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">dontStop</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">            <span class="comment">//循环条件始终为true，陷入循环</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">stackLeakByThread</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">while</span> (<span class="keyword">true</span>)&#123;	<span class="comment">//循环条件始终为true，陷入循环,持续创建线程</span></span><br><span class="line">            Thread thread = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() &#123;	<span class="comment">//通过匿名内部类的方式创建线程对象</span></span><br><span class="line">				<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                    dontStop();	<span class="comment">//调用dontStop方法</span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">            thread.start();	<span class="comment">//启动线程</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">        StackOOM oom = <span class="keyword">new</span> StackOOM();	<span class="comment">//创建对象</span></span><br><span class="line">        oom.stackLeakByThread();	<span class="comment">//stackLeakByThread()方法</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="3-本地方法栈"><a href="#3-本地方法栈" class="headerlink" title="3. 本地方法栈"></a>3. 本地方法栈</h3><ul>
+<li><p><strong>本地方法栈是什么？</strong></p>
+<ul>
+<li>本地方法区和Java Stack作用类似, 区别是虚拟机栈为执行Java方法服务, 而本地方法栈则为 Native方法服务。</li>
+<li>与虚拟机栈相同，每一个方法执行会在虚拟机栈中创建一个栈帧。每一个方法从调用到执行完成的过程，就对应着一个栈帧在虚拟机栈中入栈到出栈的过程。</li>
+<li>HotSpot VM直接就把本地方法栈和虚拟机栈合二为一。</li>
+</ul>
+</li>
+<li><p><strong>什么是Native(本地)方法？</strong></p>
+<ul>
+<li>简单地讲，一个Native Method就是一个java调用非java代码的接口。</li>
+<li>Navtive 方法是 Java 通过 JNI 直接调用本地 C/C++ 库，可以认为是 Native 方法相当于 C/C++ 暴露给 Java 的一个接口，Java 通过调用这个接口从而调用到 C/C++ 方法。 </li>
+</ul>
+</li>
+<li><p><strong>特点？</strong></p>
+<ul>
+<li>本地方法栈同样具有线程隔离性，是线程私有的内存区域。</li>
+<li>声明周期和线程是相同的。</li>
+<li>本地方法栈同样会抛出 <strong>StackOverflowError</strong> 和 <strong>OutOfMemoryError</strong> 异常。</li>
+</ul>
+</li>
+<li><p><strong>这样我们分析后，就可以在脑海中构建出下面这幅本地方法图啦！</strong></p>
+<img src="https://raw.githubusercontent.com/Agonywy/picGo/master/img/.png" style="zoom: 50%;">
+
+</li>
+</ul>
+<h3 id="4-堆（Heap）"><a href="#4-堆（Heap）" class="headerlink" title="4.  堆（Heap）"></a>4.  堆（Heap）</h3><ul>
+<li><strong>什么是堆？</strong><ul>
+<li>堆是被线程共享的一块内存区域，几乎创建的所有对象和数组都保存在 Java 堆内存中，也是垃圾收集器进行垃圾收集的重要的内存区域。</li>
+<li>Java堆是Java虚拟机所管理的内存中最大的一块， Java 虚拟机管理堆之外的内存（称为非堆内存） </li>
+<li>由于现代VM采用分代收集算法, 因此Java堆从GC的角度还可以 细分为: 新生代( Eden 区 、 From Survivor 区 和 To Survivor 区 )和老年代。 之后垃圾回收部分会详细讲解。 </li>
+</ul>
+</li>
+<li><strong>特点？</strong><ul>
+<li>堆内存是线程共享的。</li>
+<li>Java堆是进行垃圾收集的主要内存区域，因此也被称为”GC堆”。</li>
+</ul>
+</li>
+<li><strong>堆内存分配</strong><ul>
+<li>-Xms ：初始内存分配，默认是物理内存的1/64 </li>
+<li>-Xmx ：最大内存分配，默认是物理内存的1/4 </li>
+<li>默认空余堆内存小于40%时，JVM就会增大堆直到-Xmx的最大限制</li>
+<li>空余堆内存大于70%时，JVM就会减少堆直到-Xms的最小限制</li>
+<li>因此服务器一般设置-Xms、-Xmx 相等以避免在每次GC 后调整堆的大小 </li>
+</ul>
+</li>
+</ul>
+<h3 id="5-方法区"><a href="#5-方法区" class="headerlink" title="5.方法区"></a>5.方法区</h3><ul>
+<li><p><strong>方法区是什么？</strong></p>
+<ul>
+<li><p>方法区是各个线程共享的内存区域。</p>
+</li>
+<li><p>用于存储被 JVM 加载的类信息、常量、静态变量、即时编译器编译后的代码等数据。</p>
+<p>类信息：类版本号，方法，接口</p>
+</li>
+<li><p>用于. HotSpot VM把GC分代收集扩展至方法区, 即使用Java 堆的永久代来实现方法区, 这样   HotSpot的垃圾收 集器就可以像管理Java堆一样管理这部分内存</p>
+</li>
+</ul>
+</li>
+<li><p><strong>特点？</strong></p>
+<ul>
+<li>方法区是线程共享的</li>
+<li>方法区的内存回收目标主要是针对常量池的回收和对类型的卸载</li>
+<li>方法区也抛出<strong>OutOfMemoryError</strong>，当他无法满足内存分配需求时 </li>
+</ul>
+</li>
+</ul>
+<h3 id="6-神秘的运行时常量池"><a href="#6-神秘的运行时常量池" class="headerlink" title="6.神秘的运行时常量池"></a>6.神秘的运行时常量池</h3><ul>
+<li><p><strong>运行时常量池是什么？</strong></p>
+<ul>
+<li>运行时常量池（Runtime Constant Pool）是方法区的一部分。Class文件中除了有类的版本、字段、方法、接口等描述等信息外，还有一项信息是常量池 ，用于存放编译期生成的各种字面量和符号引用，这部分内容将在类加载后存放到方法区的运行时常量池中。 </li>
+</ul>
+</li>
+<li><p><strong>特点？</strong></p>
+<ul>
+<li>运行时常量池是方法区的一部分，受到方法区内存的限制，当常量池申请不到内存时,会抛出<strong>OutOfMemoryError</strong>异常</li>
+</ul>
+</li>
+<li><p><strong>运行时常量池模拟</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">A</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;  </span><br><span class="line">        String a = <span class="string">"abc"</span>;	<span class="comment">//常量池中没有字面量"abc"，创建字符串对象</span></span><br><span class="line">        String b = <span class="string">"abc"</span>;	<span class="comment">//常量池中有字面量"abc"，直接引用</span></span><br><span class="line">        System.out.println(a==b);	<span class="comment">//true</span></span><br><span class="line">        String c = <span class="keyword">new</span> String(<span class="string">"abc"</span>); <span class="comment">//出现new关键字，则创建字符串对象</span></span><br><span class="line">        System.out.println(a==c);	<span class="comment">//false ,不是同一个对象</span></span><br><span class="line">        <span class="comment">//intern用来返回常量池中的某字符串，如果常量池中已经存在该字符串，则直接返回常量		池中该对象的引用。否则，在常量池中加入该对象，然后返回引用。</span></span><br><span class="line">        System.out.println(a==c.intern());	<span class="comment">//true,常量池中有"abc"，直接引用</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+        <div class="reward-container">
+  <div>爱？就供养！打赏呗！</div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="Agonywy 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="Agonywy 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Agonywy
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://agonywy.github.io/2019/10/19/JVM%E4%B9%8B%E5%88%9D%E8%AF%86Java%E8%99%9A%E6%8B%9F%E6%9C%BA/" title="JVM之运行时数据区">https://agonywy.github.io/2019/10/19/JVM%E4%B9%8B%E5%88%9D%E8%AF%86Java%E8%99%9A%E6%8B%9F%E6%9C%BA/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="noopener" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+	 <div>
+		
+		<div>
+    
+        <div style="text-align:center;color: #ccc;font-size:14px;">-------------本文结束<i class="fa fa-paw"></i>感谢您的阅读-------------</div>
+    
+</div>
+		
+	</div>
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Java%E8%99%9A%E6%8B%9F%E6%9C%BA/" rel="tag"># Java虚拟机</a>
+              <a href="/tags/JVM/" rel="tag"># JVM</a>
+              <a href="/tags/%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA/" rel="tag"># 运行时数据区</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/2019/10/21/%E5%A4%9A%E7%BA%BF%E7%A8%8B%E5%B9%B6%E5%8F%91%E4%B9%8B%E5%86%85%E5%AD%98%E5%8F%AF%E8%A7%81%E6%80%A7%E4%B8%8Evolatile%E5%85%B3%E9%94%AE%E5%AD%97/" rel="prev" title="多线程并发之内存可见性与volatile关键字">
+                  多线程并发之内存可见性与volatile关键字 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    
+  <div class="comments" id="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC80NzE1Mi8yMzY1Mg=="></div>
+  </div>
+  
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#首先我们先通过一张图来看一下，运行时数据区到底长什么样呢？他内部到底有什么乾坤？我们一起来慢慢揭开他的神秘面纱。当然，JVM运行时数据区那一定是面试重中之重呀！"><span class="nav-number">1.</span> <span class="nav-text">首先我们先通过一张图来看一下，运行时数据区到底长什么样呢？他内部到底有什么乾坤？我们一起来慢慢揭开他的神秘面纱。当然，JVM运行时数据区那一定是面试重中之重呀！</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#接下来我们从面试的角度来深入分析，彻底打败这个纸老虎！"><span class="nav-number">2.</span> <span class="nav-text">接下来我们从面试的角度来深入分析，彻底打败这个纸老虎！</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-程序计数器（PC）"><span class="nav-number">3.</span> <span class="nav-text">1.程序计数器（PC）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-Java虚拟机栈"><span class="nav-number">4.</span> <span class="nav-text">2.Java虚拟机栈</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-本地方法栈"><span class="nav-number">5.</span> <span class="nav-text">3. 本地方法栈</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-堆（Heap）"><span class="nav-number">6.</span> <span class="nav-text">4.  堆（Heap）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-方法区"><span class="nav-number">7.</span> <span class="nav-text">5.方法区</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-神秘的运行时常量池"><span class="nav-number">8.</span> <span class="nav-text">6.神秘的运行时常量池</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Agonywy"
+    src="https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=990876467,425290997&fm=26&gp=0.jpg">
+  <p class="site-author-name" itemprop="name">Agonywy</p>
+  <div class="site-description" itemprop="description">我爱你,因为你是你，我爱你如你所是</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">30</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Agonywy" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;Agonywy" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.java1234.com/a/javaziliao/bishi/2019/0421/13374.html" title="http:&#x2F;&#x2F;www.java1234.com&#x2F;a&#x2F;javaziliao&#x2F;bishi&#x2F;2019&#x2F;0421&#x2F;13374.html" rel="noopener" target="_blank">java资源下载</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.javacoder.cn/" title="http:&#x2F;&#x2F;www.javacoder.cn&#x2F;" rel="noopener" target="_blank">知行合一</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Agonywy</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">109k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">1:39</span>
+</div>
+
+<!--
+<div class="powered-by">
+<i class="fa fa-user-md"></i>
+
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v4.2.1
+  </div>
+  <span class="post-meta-divider">|</span>
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.4.1
+  </div>
+-->
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  
+  <script color='0,0,255' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+<script src="/js/utils.js?v=7.4.1.js"></script>
+
+<script src="/js/motion.js?v=7.4.1.js"></script>
+
+
+<script src="/js/schemes/pisces.js?v=7.4.1.js"></script>
+
+
+<script src="/js/next-boot.js?v=7.4.1.js"></script>
+
+
+  <script defer src="/lib/three/three.min.js"></script>
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+
+
+  
+<script src="/js/local-search.js?v=7.4.1.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+
+
+  
+</body>
+</html>
+<!-- 页面点击小红心 -->
+  <script type="text/javascript" src="/js/clicklove.js"></script>
+

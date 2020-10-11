@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.1">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.4.1">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.4.1">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.1" color="#222">
+  <link rel="alternate" href="/atom.xml" title="如你所是" type="application/atom+xml">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.1">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.4.1',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="深分页Scroll 深分页scroll查询">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深分页Scrol&amp;deleteByQuery">
+<meta property="og:url" content="https://agonywy.github.io/2020/06/21/%E6%B7%B1%E5%88%86%E9%A1%B5Scroll%E4%B8%8EdeleteByQuery/index.html">
+<meta property="og:site_name" content="如你所是">
+<meta property="og:description" content="深分页Scroll 深分页scroll查询">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-06-21T01:22:15.000Z">
+<meta property="article:modified_time" content="2020-08-08T06:03:44.000Z">
+<meta property="article:author" content="Agonywy">
+<meta property="article:tag" content="ElasticSearch">
+<meta name="twitter:card" content="summary">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>深分页Scrol&deleteByQuery | 如你所是</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+  
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">如你所是</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Agonywy</p>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/Agonywy" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://Agonywy.github.io/2020/06/21/%E6%B7%B1%E5%88%86%E9%A1%B5Scroll%E4%B8%8EdeleteByQuery/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=990876467,425290997&fm=26&gp=0.jpg">
+      <meta itemprop="name" content="Agonywy">
+      <meta itemprop="description" content="我爱你,因为你是你，我爱你如你所是">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="如你所是">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          深分页Scrol&deleteByQuery
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-06-21 09:22:15" itemprop="dateCreated datePublished" datetime="2020-06-21T09:22:15+08:00">2020-06-21</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ElasticSearch/" itemprop="url" rel="index">
+                    <span itemprop="name">ElasticSearch</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3.6k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h4 id="深分页Scroll"><a href="#深分页Scroll" class="headerlink" title="深分页Scroll"></a>深分页Scroll</h4><ul>
+<li><strong>深分页scroll查询</strong></li>
+</ul><a id="more"></a>
+<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">ES对from+size这种分页方式是有限制的,from和size二者之和不能超过一万,超过一万之后效率及其低下</span></span><br><span class="line"><span class="comment"># 原理：</span></span><br><span class="line"><span class="comment">#  from+size    在ES查询数据的方式，</span></span><br><span class="line"><span class="attr">第一步将用户指定的关键词进行分词，</span></span><br><span class="line"><span class="attr">第二部将词汇去分词库中进行检索，得到多个文档id,</span></span><br><span class="line"><span class="meta">第三步去各个分片中拉去数据，</span> <span class="string">耗时相对较长</span></span><br><span class="line"><span class="meta">第四步根据score</span> <span class="string">将数据进行排序， 耗时相对较长</span></span><br><span class="line"><span class="meta">第五步根据from</span> <span class="string">和size 的值 将部分数据舍弃，</span></span><br><span class="line"><span class="attr">第六步，返回结果。</span></span><br><span class="line"><span class="comment">#  scroll+size 在ES查询数据的方式</span></span><br><span class="line"><span class="attr">第一步将用户指定的关键词进行分词，</span></span><br><span class="line"><span class="attr">第二部将词汇去分词库中进行检索，得到多个文档id,</span></span><br><span class="line"><span class="attr">第三步，将文档的id存放在一个ES的上下文中,可以理解为存放在ES的内存中</span></span><br><span class="line"><span class="attr">第四步，根据指定的size去ES中检索指定个数的数据，拿完数据的文档id,会从上下文中移除</span></span><br><span class="line"><span class="attr">第五步，如果需要下一页的数据，不需要重新查询，而是直接去ES的上下文中继续拿后续内容，循环第四步和第五步,直到把上下文的内容拿空为止</span></span><br><span class="line"><span class="comment">#  scroll查询方式,不适合做实时查询，因为他去ES上下文拿不数据,不像form+size每次都要重新查询拿出某一页需要的内容</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>restful风格–深分页scroll查询</strong></p>
+<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#scroll=1m,表示文档id在ES上下文中会保存一分钟,如果一分钟内没有任何操作,就会清除掉</span></span><br><span class="line"><span class="attr">POST</span> <span class="string">/index/type/_search?scroll=1m</span></span><br><span class="line"><span class="attr">&#123;</span></span><br><span class="line">  <span class="meta">"query"</span>: <span class="string">&#123;</span></span><br><span class="line">    <span class="meta">"match_all"</span>: <span class="string">&#123;&#125;			#查询全部</span></span><br><span class="line">  <span class="meta">&#125;,</span>	<span class="string"></span></span><br><span class="line">  <span class="meta">"size"</span>: <span class="string">2,				#第一页查询2条数据</span></span><br><span class="line">  <span class="meta">"sort"</span>: <span class="string">[					#手动指定排序方式</span></span><br><span class="line">    <span class="attr">&#123;</span></span><br><span class="line">      <span class="meta">"fee"</span>: <span class="string">&#123;</span></span><br><span class="line">        <span class="meta">"order"</span>: <span class="string">"desc"		#倒序</span></span><br><span class="line">      <span class="attr">&#125;</span></span><br><span class="line">    <span class="attr">&#125;</span></span><br><span class="line">  <span class="attr">]</span></span><br><span class="line"><span class="attr">&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#根据scroll 查询下一页数据</span></span><br><span class="line"><span class="attr">POST</span> <span class="string">_search/scroll</span></span><br><span class="line"><span class="attr">&#123;</span></span><br><span class="line"> 	<span class="meta">"scroll_id"</span>:<span class="string">"根据第一查询得到的scroll_id去指定",</span></span><br><span class="line"><span class="comment">	#重新指定scroll上下文再保存一分钟</span></span><br><span class="line">	<span class="meta">"scroll"</span>:<span class="string">"1m"</span></span><br><span class="line"><span class="attr">&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#删除scroll在ES上下文中的数据</span></span><br><span class="line"><span class="attr">DELETE</span></span><br><span class="line"><span class="attr">_search/scroll/scroll_id</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>Java–深分页scroll查询</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">scrollQuery</span><span class="params">()</span> <span class="keyword">throws</span> IOException</span>&#123;</span><br><span class="line">    ObjectMapper mapper = <span class="keyword">new</span> ObjectMapper();</span><br><span class="line">    RestHighLevelClient client =  EsClient.getClient();</span><br><span class="line">    String index = <span class="string">"sms-logs-index"</span>;</span><br><span class="line">    String type=<span class="string">"sms-logs-type"</span>;</span><br><span class="line">    <span class="comment">//1.创建request</span></span><br><span class="line">    SearchRequest request = <span class="keyword">new</span> SearchRequest(index);</span><br><span class="line">    request.types(type);</span><br><span class="line">    <span class="comment">//2.指定scroll信息</span></span><br><span class="line">   	request.scroll(TimeValue.timeValueMinutes(<span class="number">1L</span>));</span><br><span class="line">    <span class="comment">//3.指定查询条件</span></span><br><span class="line">    SearchSourceBuilder builder = <span class="keyword">new</span> SearchSourceBuilder();</span><br><span class="line">    builder.size(<span class="number">4</span>);	<span class="comment">//每次查4条数据</span></span><br><span class="line">    builder.sort(<span class="string">"fee"</span>,SortOrder.DESC);	<span class="comment">//指定排序</span></span><br><span class="line">    builder.query(QueryBuilders.matchAllQuery());</span><br><span class="line">    request.source(builder);</span><br><span class="line">    <span class="comment">//4.获取返回结果(1)scrollId;(2)source</span></span><br><span class="line">    SearchResponse resp = client.search(request, RequestOptions.DEFAULT);</span><br><span class="line">    String scrollId = response.getScrollId();</span><br><span class="line">    System.out.println(<span class="string">"-------------第一页数据---------------------"</span>);</span><br><span class="line">    <span class="keyword">for</span> (SearchHit hit : response.getHits().getHits()) &#123;</span><br><span class="line">        System.out.println(hit.getSourceAsMap());</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//后面的流程是为了查询下一页服务,所以应该是一个循环</span></span><br><span class="line">    <span class="keyword">while</span>(<span class="keyword">true</span>)&#123;</span><br><span class="line">        <span class="comment">//5.创建一个SearchScrollRequest,指定scrollId</span></span><br><span class="line">        SearchScrollRequest scrollRequest = <span class="keyword">new</span> SearchScrollRequest(scrollId);</span><br><span class="line">        <span class="comment">//6.指定scrolleId的生成时间</span></span><br><span class="line">		scrollRequest.scroll(TimeValue.timeValueMinutes(<span class="number">1L</span>));</span><br><span class="line">        <span class="comment">//7.执行查询获取返回结果</span></span><br><span class="line">		 SearchResponse scrollResp = client.scroll(request, RequestOptions.DEFAULT);</span><br><span class="line">        <span class="comment">//8.判断是否查询到了数据</span></span><br><span class="line">        SearchHit[] hits = scrollResp.getHits().getHits();</span><br><span class="line">		<span class="keyword">if</span>(!=<span class="keyword">null</span> &amp;&amp; hits().length &gt; <span class="number">0</span>)&#123;</span><br><span class="line">            System.out.println(<span class="string">"-------------下一页数据---------------------"</span>);</span><br><span class="line">                <span class="keyword">for</span> (SearchHit hit : searchHits) &#123;</span><br><span class="line">                    System.out.println(hit.getSourceAsMap());</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">               <span class="comment">//9.判断没有查询到数据---退出循环</span></span><br><span class="line">                System.out.println(<span class="string">"-------------结束---------------------"</span>);</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//在内容读取完之后,也就是退出循环之后,scrollId就没必要再保存在ES上下文中一分钟了</span></span><br><span class="line">        <span class="comment">//10.创建ClearScrollRequest并指定scrollId</span></span><br><span class="line">        ClearScrollRequest clearScrollRequest = <span class="keyword">new</span> ClearScrollRequest();</span><br><span class="line">        <span class="comment">//11.指定scrollId</span></span><br><span class="line">		clearScrollRequest.addScrollId(scrollId);</span><br><span class="line">        <span class="comment">//12.清除在内存中的scrollId</span></span><br><span class="line">    	ClearScrollResponse clearScrollResponse = client.clearScroll(clearScrollRequest, RequestOptions.DEFAULT);</span><br><span class="line">    	<span class="comment">//13.输出结果</span></span><br><span class="line">    	System.out.println(clearScrollResponse.isSucceeded());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="delete-by-query"><a href="#delete-by-query" class="headerlink" title="delete-by-query"></a>delete-by-query</h4><figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">根据term,match等查询方式去删除大量的文档</span></span><br><span class="line"><span class="attr">Ps</span>:<span class="string">如果你需要删除的内容是index下的大部分数据,不推荐使用delete-by-query一条一条删,建议创建一个新的索引,将要保留的内容添加到全新的索引</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>restful风格–delete-by-query</strong></p>
+<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">POST</span> <span class="string">/index/type/_delete_by_query</span></span><br><span class="line"><span class="attr">&#123;</span></span><br><span class="line">  <span class="meta">"query"</span>: <span class="string">&#123;</span></span><br><span class="line">   	 <span class="meta">"range"</span>: <span class="string">&#123;</span></span><br><span class="line">     	 <span class="meta">"fee"</span>: <span class="string">&#123;		#将费用小于4的数据查询出来进行删除</span></span><br><span class="line">     	 	<span class="meta">"lt"</span> : <span class="string">4</span></span><br><span class="line">      <span class="attr">&#125;</span></span><br><span class="line">    <span class="attr">&#125;</span></span><br><span class="line">  <span class="attr">&#125;</span></span><br><span class="line"><span class="attr">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>Java–delete-by-query</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">deleteByQuery</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="comment">//1.创建DeleteByQueryRequest</span></span><br><span class="line">    DeleteByQueryRequest request = <span class="keyword">new</span> DeleteByQueryRequest(index);</span><br><span class="line">    request.types(type);</span><br><span class="line">    <span class="comment">//2.指定检索条件</span></span><br><span class="line">    request.setQuery(QueryBuilders.rangeQuery(<span class="string">"fee"</span>).lt(<span class="number">4</span>));</span><br><span class="line">    <span class="comment">//3.client执行删除操作</span></span><br><span class="line">    BulkByScrollResponse response = client.deleteByQuery(request, RequestOptions.DEFAULT);</span><br><span class="line">    <span class="comment">//4.输出结果</span></span><br><span class="line">    System.out.println(response.toString());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+      
+        <div class="reward-container">
+  <div>爱？就供养！打赏呗！</div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="Agonywy 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="Agonywy 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Agonywy
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://agonywy.github.io/2020/06/21/%E6%B7%B1%E5%88%86%E9%A1%B5Scroll%E4%B8%8EdeleteByQuery/" title="深分页Scrol&amp;deleteByQuery">https://agonywy.github.io/2020/06/21/%E6%B7%B1%E5%88%86%E9%A1%B5Scroll%E4%B8%8EdeleteByQuery/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="noopener" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+	 <div>
+		
+		<div>
+    
+        <div style="text-align:center;color: #ccc;font-size:14px;">-------------本文结束<i class="fa fa-paw"></i>感谢您的阅读-------------</div>
+    
+</div>
+		
+	</div>
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/ElasticSearch/" rel="tag"># ElasticSearch</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/2020/06/19/%E5%85%B6%E4%BB%96%E5%90%84%E7%A7%8D%E6%9F%A5%E8%AF%A2/" rel="next" title="ES其他各种查询">
+                  <i class="fa fa-chevron-left"></i> ES其他各种查询
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/2020/06/21/match%E6%9F%A5%E8%AF%A2/" rel="prev" title="match查询">
+                  match查询 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    
+  <div class="comments" id="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC80NzE1Mi8yMzY1Mg=="></div>
+  </div>
+  
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#深分页Scroll"><span class="nav-number">1.</span> <span class="nav-text">深分页Scroll</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#delete-by-query"><span class="nav-number">2.</span> <span class="nav-text">delete-by-query</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Agonywy"
+    src="https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=990876467,425290997&fm=26&gp=0.jpg">
+  <p class="site-author-name" itemprop="name">Agonywy</p>
+  <div class="site-description" itemprop="description">我爱你,因为你是你，我爱你如你所是</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">30</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Agonywy" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;Agonywy" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.java1234.com/a/javaziliao/bishi/2019/0421/13374.html" title="http:&#x2F;&#x2F;www.java1234.com&#x2F;a&#x2F;javaziliao&#x2F;bishi&#x2F;2019&#x2F;0421&#x2F;13374.html" rel="noopener" target="_blank">java资源下载</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.javacoder.cn/" title="http:&#x2F;&#x2F;www.javacoder.cn&#x2F;" rel="noopener" target="_blank">知行合一</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Agonywy</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">109k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">1:39</span>
+</div>
+
+<!--
+<div class="powered-by">
+<i class="fa fa-user-md"></i>
+
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v4.2.1
+  </div>
+  <span class="post-meta-divider">|</span>
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.4.1
+  </div>
+-->
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  
+  <script color='0,0,255' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+<script src="/js/utils.js?v=7.4.1.js"></script>
+
+<script src="/js/motion.js?v=7.4.1.js"></script>
+
+
+<script src="/js/schemes/pisces.js?v=7.4.1.js"></script>
+
+
+<script src="/js/next-boot.js?v=7.4.1.js"></script>
+
+
+  <script defer src="/lib/three/three.min.js"></script>
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+
+
+  
+<script src="/js/local-search.js?v=7.4.1.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+
+
+  
+</body>
+</html>
+<!-- 页面点击小红心 -->
+  <script type="text/javascript" src="/js/clicklove.js"></script>
+
