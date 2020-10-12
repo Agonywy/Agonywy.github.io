@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.1">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.4.1">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.4.1">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.1" color="#222">
+  <link rel="alternate" href="/atom.xml" title="如你所是" type="application/atom+xml">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.1">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.4.1',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="(一)面向对象编程123契约接口:Aware,BeanPostProcessor...设计模式:观察者模式(ApplicationEvent),组合模式(CompositeCacheManger),模板模式(JDBCTemplate)...对象继承:Abstract*类 (AbstractApplicationContext)">
+<meta property="og:type" content="article">
+<meta property="og:title" content="spring五大编程模型">
+<meta property="og:url" content="https://agonywy.github.io/2020/10/11/2020-10-11-spring%E7%BC%96%E7%A8%8B%E6%A8%A1%E5%9E%8B/index.html">
+<meta property="og:site_name" content="如你所是">
+<meta property="og:description" content="(一)面向对象编程123契约接口:Aware,BeanPostProcessor...设计模式:观察者模式(ApplicationEvent),组合模式(CompositeCacheManger),模板模式(JDBCTemplate)...对象继承:Abstract*类 (AbstractApplicationContext)">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/Agonywy/picGo/master/img/DynamicProxy.png">
+<meta property="article:published_time" content="2020-10-11T01:42:35.000Z">
+<meta property="article:modified_time" content="2020-10-12T09:56:03.681Z">
+<meta property="article:author" content="Agonywy">
+<meta property="article:tag" content="think-in-spring">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/Agonywy/picGo/master/img/DynamicProxy.png">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>spring五大编程模型 | 如你所是</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+  
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">如你所是</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Agonywy</p>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/Agonywy" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://Agonywy.github.io/2020/10/11/2020-10-11-spring%E7%BC%96%E7%A8%8B%E6%A8%A1%E5%9E%8B/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=990876467,425290997&fm=26&gp=0.jpg">
+      <meta itemprop="name" content="Agonywy">
+      <meta itemprop="description" content="我爱你,因为你是你，我爱你如你所是">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="如你所是">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          spring五大编程模型
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-10-11 09:42:35" itemprop="dateCreated datePublished" datetime="2020-10-11T09:42:35+08:00">2020-10-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/think-in-spring/" itemprop="url" rel="index">
+                    <span itemprop="name">think-in-spring</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>12k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>11 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="一-面向对象编程"><a href="#一-面向对象编程" class="headerlink" title="(一)面向对象编程"></a>(一)面向对象编程</h3><figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">契约接口</span>:<span class="string">Aware,BeanPostProcessor...</span></span><br><span class="line"><span class="meta">设计模式</span>:<span class="string">观察者模式(ApplicationEvent),组合模式(CompositeCacheManger),模板模式(JDBCTemplate)...</span></span><br><span class="line"><span class="meta">对象继承</span>:<span class="string">Abstract*类 (AbstractApplicationContext)</span></span><br></pre></td></tr></table></figure><a id="more"></a>
+
+<h4 id="Aware"><a href="#Aware" class="headerlink" title="Aware"></a>Aware</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//Aware接口</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Aware</span> </span>&#123;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//Aware更加核心的一个接口是ApplicationContextAware</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ApplicationContextAware</span> <span class="keyword">extends</span> <span class="title">Aware</span> </span>&#123;</span><br><span class="line">    <span class="comment">//会有一个set方法,把Aware对应的类型传递过来</span></span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">setApplicationContext</span><span class="params">(ApplicationContext applicationContext)</span> <span class="keyword">throws</span> BeansException</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//同理:BeanFactoryAware接口</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">BeanFactoryAware</span> <span class="keyword">extends</span> <span class="title">Aware</span> </span>&#123;</span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">setBeanFactory</span><span class="params">(BeanFactory beanFactory)</span> <span class="keyword">throws</span> BeansException</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//总结:这种方式就是一个接口的方式，这个也称为Aware接口回调，每当我的bean去实现这个Aware接口的时候，会回调这么一个对象给我，就是传个对象过来给我们进行使用</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="BeanPostProcessor"><a href="#BeanPostProcessor" class="headerlink" title="BeanPostProcessor"></a>BeanPostProcessor</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//这个接口就是常用的关于Bean的生命周期的后置处理器</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">BeanPostProcessor</span> </span>&#123;</span><br><span class="line">    <span class="comment">//方法上使用就Java8的default方法的实现,</span></span><br><span class="line">    <span class="comment">//因此你可以选择任意一个方法来进行覆盖重写</span></span><br><span class="line">	<span class="meta">@Nullable</span></span><br><span class="line">	<span class="function"><span class="keyword">default</span> Object <span class="title">postProcessBeforeInitialization</span><span class="params">(Object bean, String beanName)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> bean;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="meta">@Nullable</span></span><br><span class="line">	<span class="function"><span class="keyword">default</span> Object <span class="title">postProcessAfterInitialization</span><span class="params">(Object bean, String beanName)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> bean;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="二-面向切面编程"><a href="#二-面向切面编程" class="headerlink" title="(二)面向切面编程"></a>(二)面向切面编程</h3><figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">动态代理</span>: <span class="string">JdkDynamicAopProxy</span></span><br><span class="line"><span class="meta">字节码提升</span>: <span class="string">ASM,CGLib,AspectJ...</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="Cglib"><a href="#Cglib" class="headerlink" title="Cglib"></a>Cglib</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">JdkDynamicAopProxy</span> <span class="keyword">implements</span> <span class="title">AopProxy</span>, <span class="title">InvocationHandler</span>, <span class="title">Serializable</span> </span>&#123;&#125;</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">AopProxy</span> </span>&#123;</span><br><span class="line">	<span class="function">Object <span class="title">getProxy</span><span class="params">()</span></span>;</span><br><span class="line">	<span class="function">Object <span class="title">getProxy</span><span class="params">(@Nullable ClassLoader classLoader)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="AopProxy的实现方式"><a href="#AopProxy的实现方式" class="headerlink" title="AopProxy的实现方式"></a>AopProxy的实现方式</h4><img src="https://raw.githubusercontent.com/Agonywy/picGo/master/img/DynamicProxy.png" style="zoom: 67%;">
+
+<h4 id="DynamicProxy-动态代理"><a href="#DynamicProxy-动态代理" class="headerlink" title="DynamicProxy:动态代理"></a>DynamicProxy:动态代理</h4><figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">Spring中的动态代理主要有两种方式</span>:<span class="string"></span></span><br><span class="line"><span class="meta">1.JDK动态代理</span>:<span class="string">为接口提供代理,他是通过为接口实现了一个匿名内部类,在匿名实现类中完成了对方法的增强</span></span><br><span class="line"><span class="meta">2.CGLig动态代理</span>:<span class="string">为类提供代理,他是通过为类实现了一个子类,子类继承父类方法进行重写覆盖,完成对方法的增强</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="三-面向元编程"><a href="#三-面向元编程" class="headerlink" title="(三)面向元编程"></a>(三)面向元编程</h3><figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">注解</span>: <span class="string">模式注解(@Component,@Service,@Repository)...</span></span><br><span class="line"><span class="meta">配置</span>: <span class="string">Environment抽象,PropertySources,BeanDefinition...</span></span><br><span class="line"><span class="meta">泛型</span>: <span class="string">GenericTypeResolver,ResolvableType...</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="Component-如果你把他标记在一个类上-那么这个类就变成一个SpringBean"><a href="#Component-如果你把他标记在一个类上-那么这个类就变成一个SpringBean" class="headerlink" title="@Component:如果你把他标记在一个类上,那么这个类就变成一个SpringBean"></a>@Component:如果你把他标记在一个类上,那么这个类就变成一个SpringBean</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**相关的派生类:<span class="doctag">@Repository</span>、<span class="doctag">@Service</span>、<span class="doctag">@Controller</span> 和 <span class="doctag">@Component</span> 将类标识为Bean</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@see</span> Repository</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@see</span> Service</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@see</span> Controller</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Target</span>(ElementType.TYPE)</span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="meta">@Indexed</span></span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> Component &#123;</span><br><span class="line">	<span class="function">String <span class="title">value</span><span class="params">()</span> <span class="keyword">default</span> ""</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="ComponentScan-注解扫描功能"><a href="#ComponentScan-注解扫描功能" class="headerlink" title="@ComponentScan:注解扫描功能"></a>@ComponentScan:注解扫描功能</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="meta">@Target</span>(ElementType.TYPE)</span><br><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="meta">@Repeatable</span>(ComponentScans<span class="class">.<span class="keyword">class</span>)</span></span><br><span class="line"><span class="class"><span class="title">public</span> @<span class="title">interface</span> <span class="title">ComponentScan</span> </span>&#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="Repository-存储层Bean"><a href="#Repository-存储层Bean" class="headerlink" title="@Repository:存储层Bean"></a>@Repository:存储层Bean</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Target</span>(&#123;ElementType.TYPE&#125;)</span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> Repository &#123;</span><br><span class="line">	<span class="meta">@AliasFor</span>(annotation = Component<span class="class">.<span class="keyword">class</span>)</span></span><br><span class="line">	String value() default "";</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="Service-业务层bean"><a href="#Service-业务层bean" class="headerlink" title="@Service:业务层bean"></a>@Service:业务层bean</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Target</span>(&#123;ElementType.TYPE&#125;)</span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> Service &#123;</span><br><span class="line">	<span class="meta">@AliasFor</span>(annotation = Component<span class="class">.<span class="keyword">class</span>)</span></span><br><span class="line">	String value() default "";</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="Controller-表现层bean"><a href="#Controller-表现层bean" class="headerlink" title="@Controller:表现层bean"></a>@Controller:表现层bean</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Target</span>(&#123;ElementType.TYPE&#125;)</span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> Controller &#123;</span><br><span class="line">	<span class="meta">@AliasFor</span>(annotation = Component<span class="class">.<span class="keyword">class</span>)</span></span><br><span class="line">	String value() default "";</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="Environment配置"><a href="#Environment配置" class="headerlink" title="Environment配置"></a>Environment配置</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//Environment主要涉及两部分内容</span></span><br><span class="line"><span class="comment">//1.profile:可以认为是用户配置,这个配置可以对不同的系统来进行区分(Dev开发环境,Prod生产环境)</span></span><br><span class="line"><span class="comment">//2.第二个是属性:PropertyResolver</span></span><br><span class="line"><span class="comment">//Environment接口继承自PropertyResolver，增加了获取Profiles相关接口</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Environment</span> <span class="keyword">extends</span> <span class="title">PropertyResolver</span> </span>&#123;</span><br><span class="line">	String[] getActiveProfiles();</span><br><span class="line">	String[] getDefaultProfiles();</span><br><span class="line">	<span class="meta">@Deprecated</span></span><br><span class="line">	<span class="function"><span class="keyword">boolean</span> <span class="title">acceptsProfiles</span><span class="params">(String... profiles)</span></span>;</span><br><span class="line">	<span class="function"><span class="keyword">boolean</span> <span class="title">acceptsProfiles</span><span class="params">(Profiles profiles)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="PropertyResolver父接口—–get方法可以看出是Key-Value方式存储数据的"><a href="#PropertyResolver父接口—–get方法可以看出是Key-Value方式存储数据的" class="headerlink" title="PropertyResolver父接口—–get方法可以看出是Key-Value方式存储数据的"></a>PropertyResolver父接口—–get方法可以看出是Key-Value方式存储数据的</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//PropertySourcesPropertyResolver--&gt;AbstractPropertyResolver--&gt;</span></span><br><span class="line"><span class="comment">//--&gt;ConfigurablePropertyResolver--&gt;PropertyResolver</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">PropertyResolver</span> </span>&#123;</span><br><span class="line">	<span class="function"><span class="keyword">boolean</span> <span class="title">containsProperty</span><span class="params">(String key)</span></span>;</span><br><span class="line">	<span class="meta">@Nullable</span></span><br><span class="line">	<span class="function">String <span class="title">getProperty</span><span class="params">(String key)</span></span>;</span><br><span class="line">	<span class="function">String <span class="title">getProperty</span><span class="params">(String key, String defaultValue)</span></span>;</span><br><span class="line">	<span class="meta">@Nullable</span></span><br><span class="line">	&lt;T&gt; <span class="function">T <span class="title">getProperty</span><span class="params">(String key, Class&lt;T&gt; targetType)</span></span>;</span><br><span class="line">	&lt;T&gt; <span class="function">T <span class="title">getProperty</span><span class="params">(String key, Class&lt;T&gt; targetType, T defaultValue)</span></span>;</span><br><span class="line">	<span class="function">String <span class="title">getRequiredProperty</span><span class="params">(String key)</span> <span class="keyword">throws</span> IllegalStateException</span>;</span><br><span class="line">	&lt;T&gt; <span class="function">T <span class="title">getRequiredProperty</span><span class="params">(String key, Class&lt;T&gt; targetType)</span> <span class="keyword">throws</span> IllegalStateException</span>;</span><br><span class="line">	<span class="function">String <span class="title">resolvePlaceholders</span><span class="params">(String text)</span></span>;</span><br><span class="line">	<span class="function">String <span class="title">resolveRequiredPlaceholders</span><span class="params">(String text)</span> <span class="keyword">throws</span> IllegalArgumentException</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="PropertySourcesPropertyResolver类：体系中唯一的完整实体类"><a href="#PropertySourcesPropertyResolver类：体系中唯一的完整实体类" class="headerlink" title="PropertySourcesPropertyResolver类：体系中唯一的完整实体类"></a>PropertySourcesPropertyResolver类：体系中唯一的完整实体类</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//它以PropertySources属性源集合（内部持有属性源列表List&lt;PropertySource&gt;）为属性值的来源，按序遍历每个PropertySource，获取到一个非null的属性值则返回</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">PropertySourcesPropertyResolver</span> <span class="keyword">extends</span> <span class="title">AbstractPropertyResolver</span> </span>&#123;</span><br><span class="line">	<span class="meta">@Nullable</span></span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> PropertySources propertySources;</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="title">PropertySourcesPropertyResolver</span><span class="params">(@Nullable PropertySources propertySources)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.propertySources = propertySources;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="meta">@Nullable</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> String <span class="title">getProperty</span><span class="params">(String key)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> getProperty(key, String<span class="class">.<span class="keyword">class</span>, <span class="title">true</span>)</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="meta">@Nullable</span></span><br><span class="line">	<span class="keyword">public</span> &lt;T&gt; <span class="function">T <span class="title">getProperty</span><span class="params">(String key, Class&lt;T&gt; targetValueType)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> getProperty(key, targetValueType, <span class="keyword">true</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="meta">@Nullable</span></span><br><span class="line">	<span class="keyword">protected</span> &lt;T&gt; <span class="function">T <span class="title">getProperty</span><span class="params">(String key, Class&lt;T&gt; targetValueType, <span class="keyword">boolean</span> resolveNestedPlaceholders)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">if</span> (<span class="keyword">this</span>.propertySources != <span class="keyword">null</span>) &#123;</span><br><span class="line">			<span class="keyword">for</span> (PropertySource&lt;?&gt; propertySource : <span class="keyword">this</span>.propertySources) &#123;</span><br><span class="line">				<span class="keyword">if</span> (logger.isTraceEnabled()) &#123;</span><br><span class="line">					logger.trace(<span class="string">"Searching for key '"</span> + key + <span class="string">"' in PropertySource '"</span> +</span><br><span class="line">							propertySource.getName() + <span class="string">"'"</span>);</span><br><span class="line">				&#125;</span><br><span class="line">				Object value = propertySource.getProperty(key);</span><br><span class="line">				<span class="keyword">if</span> (value != <span class="keyword">null</span>) &#123;</span><br><span class="line">					<span class="keyword">if</span> (resolveNestedPlaceholders &amp;&amp; value <span class="keyword">instanceof</span> String) &#123;</span><br><span class="line">						value = resolveNestedPlaceholders((String) value);</span><br><span class="line">					&#125;</span><br><span class="line">					logKeyFound(key, propertySource, value);</span><br><span class="line">					<span class="keyword">return</span> convertValueIfNecessary(value, targetValueType);</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (logger.isTraceEnabled()) &#123;</span><br><span class="line">			logger.trace(<span class="string">"Could not find key '"</span> + key + <span class="string">"' in any property source"</span>);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="那么数据源来自哪里：PropertySources接口"><a href="#那么数据源来自哪里：PropertySources接口" class="headerlink" title="那么数据源来自哪里：PropertySources接口"></a>那么数据源来自哪里：PropertySources接口</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Target</span>(ElementType.TYPE)</span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> PropertySources &#123;</span><br><span class="line">	PropertySource[] value();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="第一种数据来源的方式：普通JavaAPI的方式"><a href="#第一种数据来源的方式：普通JavaAPI的方式" class="headerlink" title="第一种数据来源的方式：普通JavaAPI的方式"></a>第一种数据来源的方式：普通JavaAPI的方式</h4><h4 id="PropertySource抽象类"><a href="#PropertySource抽象类" class="headerlink" title="PropertySource抽象类:"></a>PropertySource抽象类:</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">PropertySource</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line">	<span class="keyword">protected</span> <span class="keyword">final</span> Log logger = LogFactory.getLog(getClass());</span><br><span class="line">	<span class="keyword">protected</span> <span class="keyword">final</span> String name; <span class="comment">//属性源名称</span></span><br><span class="line">	<span class="keyword">protected</span> <span class="keyword">final</span> T source;	 <span class="comment">//属性源（比如来自Map，那就是一个Map对象）</span></span><br><span class="line">    <span class="comment">//相当于一个Environment对应了多个PropertySource的一个实现方法，</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="第二种属性来源的方式：通过注解的方式"><a href="#第二种属性来源的方式：通过注解的方式" class="headerlink" title="第二种属性来源的方式：通过注解的方式"></a>第二种属性来源的方式：通过注解的方式</h4><h4 id="PropertySource注解"><a href="#PropertySource注解" class="headerlink" title="@PropertySource注解"></a>@PropertySource注解</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"> <span class="comment">/** <span class="doctag">@see</span> org.springframework.core.env.PropertySource:数据来源</span></span><br><span class="line"><span class="comment"> *   <span class="doctag">@see</span> org.springframework.core.env.ConfigurableEnvironment#getPropertySources():</span></span><br><span class="line"><span class="comment"> *   <span class="doctag">@see</span> org.springframework.core.env.MutablePropertySources</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Target</span>(ElementType.TYPE)</span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="meta">@Repeatable</span>(PropertySources<span class="class">.<span class="keyword">class</span>)</span></span><br><span class="line"><span class="class"><span class="title">public</span> @<span class="title">interface</span> <span class="title">PropertySource</span> </span>&#123;</span><br><span class="line">	<span class="function">String <span class="title">name</span><span class="params">()</span> <span class="keyword">default</span> ""</span>; 	<span class="comment">//资源的名称</span></span><br><span class="line">	String[] value();		   <span class="comment">//资源路径:比如classpath地址或者文件系统地址</span></span><br><span class="line">    <span class="comment">//是否忽略文件资源是否存在，默认是false,也就是说配置不存在的文件地址spring启动将会报错</span></span><br><span class="line">	<span class="function"><span class="keyword">boolean</span> <span class="title">ignoreResourceNotFound</span><span class="params">()</span> <span class="keyword">default</span> <span class="keyword">false</span></span>;</span><br><span class="line">	<span class="function">String <span class="title">encoding</span><span class="params">()</span> <span class="keyword">default</span> ""</span>;	<span class="comment">//字符编码</span></span><br><span class="line">    <span class="comment">//关键的元素:读取对应资源文件的工厂类,默认的是PropertySourceFactory</span></span><br><span class="line">	Class&lt;? extends PropertySourceFactory&gt; factory() <span class="keyword">default</span> PropertySourceFactory<span class="class">.<span class="keyword">class</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="PropertySource注解底层是如何解析这些配置文件"><a href="#PropertySource注解底层是如何解析这些配置文件" class="headerlink" title="PropertySource注解底层是如何解析这些配置文件"></a>PropertySource注解底层是如何解析这些配置文件</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// @see DefaultPropertySourceFactory</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">PropertySourceFactory</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	PropertySource&lt;?&gt; createPropertySource(<span class="meta">@Nullable</span> String name, EncodedResource resource) <span class="keyword">throws</span> IOException;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="createPropertySource方法"><a href="#createPropertySource方法" class="headerlink" title="createPropertySource方法"></a>createPropertySource方法</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DefaultPropertySourceFactory</span> <span class="keyword">implements</span> <span class="title">PropertySourceFactory</span> </span>&#123;</span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="keyword">public</span> PropertySource&lt;?&gt; createPropertySource(<span class="meta">@Nullable</span> String name, EncodedResource resource) <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">		<span class="keyword">return</span> (name != <span class="keyword">null</span> ? <span class="keyword">new</span> ResourcePropertySource(name, resource) : <span class="keyword">new</span> ResourcePropertySource(resource));</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="出现了ResourcePropertySource"><a href="#出现了ResourcePropertySource" class="headerlink" title="出现了ResourcePropertySource"></a>出现了ResourcePropertySource</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//两个主要的构造方法</span></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * Create a PropertySource having the given name based on Properties</span></span><br><span class="line"><span class="comment">	 * loaded from the given encoded resource.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="title">ResourcePropertySource</span><span class="params">(String name, EncodedResource resource)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">		<span class="keyword">super</span>(name, PropertiesLoaderUtils.loadProperties(resource));</span><br><span class="line">		<span class="keyword">this</span>.resourceName = getNameForResource(resource.getResource());</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * Create a PropertySource based on Properties loaded from the given resource.</span></span><br><span class="line"><span class="comment">	 * The name of the PropertySource will be generated based on the</span></span><br><span class="line"><span class="comment">	 * &#123;<span class="doctag">@link</span> Resource#getDescription() description&#125; of the given resource.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="title">ResourcePropertySource</span><span class="params">(EncodedResource resource)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">		<span class="keyword">super</span>(getNameForResource(resource.getResource()), PropertiesLoaderUtils.loadProperties(resource));</span><br><span class="line">		<span class="keyword">this</span>.resourceName = <span class="keyword">null</span>;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="加载资源-PropertiesLoaderUtils-loadProperties-resource"><a href="#加载资源-PropertiesLoaderUtils-loadProperties-resource" class="headerlink" title="加载资源:PropertiesLoaderUtils.loadProperties(resource)"></a>加载资源:PropertiesLoaderUtils.loadProperties(resource)</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Properties <span class="title">loadProperties</span><span class="params">(EncodedResource resource)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">		Properties props = <span class="keyword">new</span> Properties();</span><br><span class="line">		fillProperties(props, resource);</span><br><span class="line">		<span class="keyword">return</span> props;</span><br><span class="line">	&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">fillProperties</span><span class="params">(Properties props, EncodedResource resource)</span></span></span><br><span class="line"><span class="function">			<span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line"></span><br><span class="line">		fillProperties(props, resource, <span class="keyword">new</span> DefaultPropertiesPersister());</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="继续跟-fillProperties-props-resource-new-DefaultPropertiesPersister"><a href="#继续跟-fillProperties-props-resource-new-DefaultPropertiesPersister" class="headerlink" title="继续跟:fillProperties(props, resource, new DefaultPropertiesPersister());"></a>继续跟:fillProperties(props, resource, new DefaultPropertiesPersister());</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">fillProperties</span><span class="params">(Properties props, EncodedResource resource, PropertiesPersister persister)</span></span></span><br><span class="line"><span class="function">			<span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">		InputStream stream = <span class="keyword">null</span>;</span><br><span class="line">		Reader reader = <span class="keyword">null</span>;</span><br><span class="line">		<span class="keyword">try</span> &#123;</span><br><span class="line">			String filename = resource.getResource().getFilename();</span><br><span class="line">			<span class="keyword">if</span> (filename != <span class="keyword">null</span> &amp;&amp; filename.endsWith(XML_FILE_EXTENSION)) &#123;</span><br><span class="line">                <span class="comment">//加载xml文件</span></span><br><span class="line">				stream = resource.getInputStream();</span><br><span class="line">				persister.loadFromXml(props, stream);</span><br><span class="line">			&#125;</span><br><span class="line">            <span class="comment">//判断是否有需要对应的字符编码设置</span></span><br><span class="line">            <span class="comment">//有的话处理对应的InputStream</span></span><br><span class="line">			<span class="keyword">else</span> <span class="keyword">if</span> (resource.requiresReader()) &#123;</span><br><span class="line">				reader = resource.getReader();</span><br><span class="line">				persister.load(props, reader);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span> &#123;</span><br><span class="line">				stream = resource.getInputStream();</span><br><span class="line">				persister.load(props, stream);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">finally</span> &#123;</span><br><span class="line">			<span class="keyword">if</span> (stream != <span class="keyword">null</span>) &#123;</span><br><span class="line">				stream.close();</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">if</span> (reader != <span class="keyword">null</span>) &#123;</span><br><span class="line">				reader.close();</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="ConfigurableEnvironment接口"><a href="#ConfigurableEnvironment接口" class="headerlink" title="ConfigurableEnvironment接口"></a>ConfigurableEnvironment接口</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ConfigurableEnvironment</span> <span class="keyword">extends</span> <span class="title">Environment</span>, <span class="title">ConfigurablePropertyResolver</span> </span>&#123;</span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">setActiveProfiles</span><span class="params">(String... profiles)</span></span>;</span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">addActiveProfile</span><span class="params">(String profile)</span></span>;</span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">setDefaultProfiles</span><span class="params">(String... profiles)</span></span>;</span><br><span class="line">    <span class="comment">//注意返回值类型</span></span><br><span class="line">	<span class="function">MutablePropertySources <span class="title">getPropertySources</span><span class="params">()</span></span>;</span><br><span class="line">	<span class="function">Map&lt;String, Object&gt; <span class="title">getSystemProperties</span><span class="params">()</span></span>;</span><br><span class="line">	<span class="function">Map&lt;String, Object&gt; <span class="title">getSystemEnvironment</span><span class="params">()</span></span>;</span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">merge</span><span class="params">(ConfigurableEnvironment parent)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="MutablePropertySources类"><a href="#MutablePropertySources类" class="headerlink" title="MutablePropertySources类"></a>MutablePropertySources类</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MutablePropertySources</span> <span class="keyword">implements</span> <span class="title">PropertySources</span> </span>&#123;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> List&lt;PropertySource&lt;?&gt;&gt; propertySourceList = <span class="keyword">new</span> CopyOnWriteArrayList&lt;&gt;();</span><br><span class="line">	<span class="comment">//Create a new &#123;@link MutablePropertySources&#125; object.</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="title">MutablePropertySources</span><span class="params">()</span> </span>&#123;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//Create a new &#123;@code MutablePropertySources&#125; from the given propertySources object</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="title">MutablePropertySources</span><span class="params">(PropertySources propertySources)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>();</span><br><span class="line">		<span class="keyword">for</span> (PropertySource&lt;?&gt; propertySource : propertySources) &#123;</span><br><span class="line">			addLast(propertySource);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="四-函数驱动：函数式编程"><a href="#四-函数驱动：函数式编程" class="headerlink" title="(四)函数驱动：函数式编程"></a>(四)函数驱动：函数式编程</h3><figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">函数接口</span>: <span class="string">ApplicationEventPublisher, Reactive:Spring WebFlux</span></span><br><span class="line"><span class="meta">Java8新的函数接口</span>: <span class="string">public @interface FunctionalInterface &#123;&#125;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="FunctionalInterface注解-函数接口定义"><a href="#FunctionalInterface注解-函数接口定义" class="headerlink" title="FunctionalInterface注解:函数接口定义"></a>FunctionalInterface注解:函数接口定义</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"> <span class="comment">/** <span class="doctag">@jls</span> 9.8 Functional Interfaces</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@jls</span> 9.4.3 Interface Method Body</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="meta">@Target</span>(ElementType.TYPE)</span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> FunctionalInterface &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>函数接口简单讲他有一些约束，他只有一个抽象方法，排除掉Object中的equals和hashCode等声明方法以及default实现</strong></p>
+<h4 id="比如ApplicationListener"><a href="#比如ApplicationListener" class="headerlink" title="比如ApplicationListener"></a>比如ApplicationListener</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@FunctionalInterface</span>	<span class="comment">//函数接口定义</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ApplicationListener</span>&lt;<span class="title">E</span> <span class="keyword">extends</span> <span class="title">ApplicationEvent</span>&gt; <span class="keyword">extends</span> <span class="title">EventListener</span> </span>&#123;</span><br><span class="line">	<span class="comment">//Handle an application event.只有一个方法(函数实现)</span></span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">onApplicationEvent</span><span class="params">(E event)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="五-模块驱动"><a href="#五-模块驱动" class="headerlink" title="(五)模块驱动"></a>(五)模块驱动</h3><figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">Maven</span> <span class="string">Artifacts,OSGI Bundles,Java9 Automatic Modules,Spring @Enable*</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="最熟悉的EnableCaching-激活缓存模块"><a href="#最熟悉的EnableCaching-激活缓存模块" class="headerlink" title="最熟悉的EnableCaching:激活缓存模块"></a>最熟悉的EnableCaching:激活缓存模块</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Target</span>(ElementType.TYPE)</span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="meta">@Import</span>(CachingConfigurationSelector<span class="class">.<span class="keyword">class</span>)</span></span><br><span class="line"><span class="class"><span class="title">public</span> @<span class="title">interface</span> <span class="title">EnableCaching</span> </span>&#123;</span><br><span class="line">	<span class="function"><span class="keyword">boolean</span> <span class="title">proxyTargetClass</span><span class="params">()</span> <span class="keyword">default</span> <span class="keyword">false</span></span>;</span><br><span class="line">	<span class="function">AdviceMode <span class="title">mode</span><span class="params">()</span> <span class="keyword">default</span> AdviceMode.PROXY</span>;</span><br><span class="line">	<span class="function"><span class="keyword">int</span> <span class="title">order</span><span class="params">()</span> <span class="keyword">default</span> Ordered.LOWEST_PRECEDENCE</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="还有比如EnablTransactionManagement激活事务模块"><a href="#还有比如EnablTransactionManagement激活事务模块" class="headerlink" title="还有比如EnablTransactionManagement激活事务模块"></a>还有比如EnablTransactionManagement激活事务模块</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Target</span>(ElementType.TYPE)</span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="meta">@Import</span>(TransactionManagementConfigurationSelector<span class="class">.<span class="keyword">class</span>)</span></span><br><span class="line"><span class="class"><span class="title">public</span> @<span class="title">interface</span> <span class="title">EnableTransactionManagement</span> </span>&#123;</span><br><span class="line">	<span class="function"><span class="keyword">boolean</span> <span class="title">proxyTargetClass</span><span class="params">()</span> <span class="keyword">default</span> <span class="keyword">false</span></span>;</span><br><span class="line">	<span class="function">AdviceMode <span class="title">mode</span><span class="params">()</span> <span class="keyword">default</span> AdviceMode.PROXY</span>;</span><br><span class="line">	<span class="function"><span class="keyword">int</span> <span class="title">order</span><span class="params">()</span> <span class="keyword">default</span> Ordered.LOWEST_PRECEDENCE</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="还有比如激活EnableWebMvc模块"><a href="#还有比如激活EnableWebMvc模块" class="headerlink" title="还有比如激活EnableWebMvc模块"></a>还有比如激活EnableWebMvc模块</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="meta">@Target</span>(ElementType.TYPE)</span><br><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="meta">@Import</span>(DelegatingWebMvcConfiguration<span class="class">.<span class="keyword">class</span>)</span></span><br><span class="line"><span class="class"><span class="title">public</span> @<span class="title">interface</span> <span class="title">EnableWebMvc</span> </span>&#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+      
+        <div class="reward-container">
+  <div>爱？就供养！打赏呗！</div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="Agonywy 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="Agonywy 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Agonywy
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://agonywy.github.io/2020/10/11/2020-10-11-spring%E7%BC%96%E7%A8%8B%E6%A8%A1%E5%9E%8B/" title="spring五大编程模型">https://agonywy.github.io/2020/10/11/2020-10-11-spring%E7%BC%96%E7%A8%8B%E6%A8%A1%E5%9E%8B/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="noopener" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+	 <div>
+		
+		<div>
+    
+        <div style="text-align:center;color: #ccc;font-size:14px;">-------------本文结束<i class="fa fa-paw"></i>感谢您的阅读-------------</div>
+    
+</div>
+		
+	</div>
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/think-in-spring/" rel="tag"># think-in-spring</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/2020/07/21/%E5%B8%AD%E5%8D%B7Java%E4%B8%BB%E6%B5%81%E9%94%81/" rel="next" title="席卷Java各种锁">
+                  <i class="fa fa-chevron-left"></i> 席卷Java各种锁
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    
+  <div class="comments" id="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC80NzE1Mi8yMzY1Mg=="></div>
+  </div>
+  
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#一-面向对象编程"><span class="nav-number">1.</span> <span class="nav-text">(一)面向对象编程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Aware"><span class="nav-number">1.1.</span> <span class="nav-text">Aware</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#BeanPostProcessor"><span class="nav-number">1.2.</span> <span class="nav-text">BeanPostProcessor</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#二-面向切面编程"><span class="nav-number">2.</span> <span class="nav-text">(二)面向切面编程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Cglib"><span class="nav-number">2.1.</span> <span class="nav-text">Cglib</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#AopProxy的实现方式"><span class="nav-number">2.2.</span> <span class="nav-text">AopProxy的实现方式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#DynamicProxy-动态代理"><span class="nav-number">2.3.</span> <span class="nav-text">DynamicProxy:动态代理</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#三-面向元编程"><span class="nav-number">3.</span> <span class="nav-text">(三)面向元编程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Component-如果你把他标记在一个类上-那么这个类就变成一个SpringBean"><span class="nav-number">3.1.</span> <span class="nav-text">@Component:如果你把他标记在一个类上,那么这个类就变成一个SpringBean</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ComponentScan-注解扫描功能"><span class="nav-number">3.2.</span> <span class="nav-text">@ComponentScan:注解扫描功能</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Repository-存储层Bean"><span class="nav-number">3.3.</span> <span class="nav-text">@Repository:存储层Bean</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Service-业务层bean"><span class="nav-number">3.4.</span> <span class="nav-text">@Service:业务层bean</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Controller-表现层bean"><span class="nav-number">3.5.</span> <span class="nav-text">@Controller:表现层bean</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Environment配置"><span class="nav-number">3.6.</span> <span class="nav-text">Environment配置</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#PropertyResolver父接口—–get方法可以看出是Key-Value方式存储数据的"><span class="nav-number">3.7.</span> <span class="nav-text">PropertyResolver父接口—–get方法可以看出是Key-Value方式存储数据的</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#PropertySourcesPropertyResolver类：体系中唯一的完整实体类"><span class="nav-number">3.8.</span> <span class="nav-text">PropertySourcesPropertyResolver类：体系中唯一的完整实体类</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#那么数据源来自哪里：PropertySources接口"><span class="nav-number">3.9.</span> <span class="nav-text">那么数据源来自哪里：PropertySources接口</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#第一种数据来源的方式：普通JavaAPI的方式"><span class="nav-number">3.10.</span> <span class="nav-text">第一种数据来源的方式：普通JavaAPI的方式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#PropertySource抽象类"><span class="nav-number">3.11.</span> <span class="nav-text">PropertySource抽象类:</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#第二种属性来源的方式：通过注解的方式"><span class="nav-number">3.12.</span> <span class="nav-text">第二种属性来源的方式：通过注解的方式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#PropertySource注解"><span class="nav-number">3.13.</span> <span class="nav-text">@PropertySource注解</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#PropertySource注解底层是如何解析这些配置文件"><span class="nav-number">3.14.</span> <span class="nav-text">PropertySource注解底层是如何解析这些配置文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#createPropertySource方法"><span class="nav-number">3.15.</span> <span class="nav-text">createPropertySource方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#出现了ResourcePropertySource"><span class="nav-number">3.16.</span> <span class="nav-text">出现了ResourcePropertySource</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#加载资源-PropertiesLoaderUtils-loadProperties-resource"><span class="nav-number">3.17.</span> <span class="nav-text">加载资源:PropertiesLoaderUtils.loadProperties(resource)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#继续跟-fillProperties-props-resource-new-DefaultPropertiesPersister"><span class="nav-number">3.18.</span> <span class="nav-text">继续跟:fillProperties(props, resource, new DefaultPropertiesPersister());</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ConfigurableEnvironment接口"><span class="nav-number">3.19.</span> <span class="nav-text">ConfigurableEnvironment接口</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#MutablePropertySources类"><span class="nav-number">3.20.</span> <span class="nav-text">MutablePropertySources类</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#四-函数驱动：函数式编程"><span class="nav-number">4.</span> <span class="nav-text">(四)函数驱动：函数式编程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#FunctionalInterface注解-函数接口定义"><span class="nav-number">4.1.</span> <span class="nav-text">FunctionalInterface注解:函数接口定义</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#比如ApplicationListener"><span class="nav-number">4.2.</span> <span class="nav-text">比如ApplicationListener</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#五-模块驱动"><span class="nav-number">5.</span> <span class="nav-text">(五)模块驱动</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#最熟悉的EnableCaching-激活缓存模块"><span class="nav-number">5.1.</span> <span class="nav-text">最熟悉的EnableCaching:激活缓存模块</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#还有比如EnablTransactionManagement激活事务模块"><span class="nav-number">5.2.</span> <span class="nav-text">还有比如EnablTransactionManagement激活事务模块</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#还有比如激活EnableWebMvc模块"><span class="nav-number">5.3.</span> <span class="nav-text">还有比如激活EnableWebMvc模块</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Agonywy"
+    src="https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=990876467,425290997&fm=26&gp=0.jpg">
+  <p class="site-author-name" itemprop="name">Agonywy</p>
+  <div class="site-description" itemprop="description">我爱你,因为你是你，我爱你如你所是</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">31</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">15</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Agonywy" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;Agonywy" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://tech.meituan.com/" title="https:&#x2F;&#x2F;tech.meituan.com&#x2F;" rel="noopener" target="_blank">硬核_美团技术</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.javacoder.cn/" title="http:&#x2F;&#x2F;www.javacoder.cn&#x2F;" rel="noopener" target="_blank">软核_知行合一</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Agonywy</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">121k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">1:50</span>
+</div>
+
+<!--
+<div class="powered-by">
+<i class="fa fa-user-md"></i>
+
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v4.2.1
+  </div>
+  <span class="post-meta-divider">|</span>
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.4.1
+  </div>
+-->
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  
+  <script color='0,0,255' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+<script src="/js/utils.js?v=7.4.1.js"></script>
+
+<script src="/js/motion.js?v=7.4.1.js"></script>
+
+
+<script src="/js/schemes/pisces.js?v=7.4.1.js"></script>
+
+
+<script src="/js/next-boot.js?v=7.4.1.js"></script>
+
+
+  <script defer src="/lib/three/three.min.js"></script>
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+
+
+  
+<script src="/js/local-search.js?v=7.4.1.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+
+
+  
+</body>
+</html>
+<!-- 页面点击小红心 -->
+  <script type="text/javascript" src="/js/clicklove.js"></script>
+
