@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.1">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.4.1">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.4.1">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.1" color="#222">
+  <link rel="alternate" href="/atom.xml" title="如你所是" type="application/atom+xml">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.1">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.4.1',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="Spring IOC我们现在理解的IOC实现大致上可以分为两种实现方式—-分别是依赖查找和依赖注入">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring IOC依赖查找">
+<meta property="og:url" content="https://agonywy.github.io/2020/10/13/2020-10-13-%E9%87%8D%E6%96%B0%E8%AE%A4%E8%AF%86IOC(%E4%BA%8C)/index.html">
+<meta property="og:site_name" content="如你所是">
+<meta property="og:description" content="Spring IOC我们现在理解的IOC实现大致上可以分为两种实现方式—-分别是依赖查找和依赖注入">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-10-13T04:26:35.000Z">
+<meta property="article:modified_time" content="2020-10-13T09:45:00.995Z">
+<meta property="article:author" content="Agonywy">
+<meta property="article:tag" content="think-in-spring">
+<meta name="twitter:card" content="summary">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Spring IOC依赖查找 | 如你所是</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+  
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">如你所是</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Agonywy</p>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/Agonywy" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://Agonywy.github.io/2020/10/13/2020-10-13-%E9%87%8D%E6%96%B0%E8%AE%A4%E8%AF%86IOC(%E4%BA%8C)/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=990876467,425290997&fm=26&gp=0.jpg">
+      <meta itemprop="name" content="Agonywy">
+      <meta itemprop="description" content="我爱你,因为你是你，我爱你如你所是">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="如你所是">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Spring IOC依赖查找
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-10-13 12:26:35" itemprop="dateCreated datePublished" datetime="2020-10-13T12:26:35+08:00">2020-10-13</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/think-in-spring/" itemprop="url" rel="index">
+                    <span itemprop="name">think-in-spring</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>9.4k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>9 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h4 id="Spring-IOC"><a href="#Spring-IOC" class="headerlink" title="Spring IOC"></a>Spring IOC</h4><p>我们现在理解的IOC实现大致上可以分为两种实现方式—-分别是依赖查找和依赖注入</p><a id="more"></a>
+<h4 id="Spring-IOC依赖查找"><a href="#Spring-IOC依赖查找" class="headerlink" title="Spring IOC依赖查找"></a>Spring IOC依赖查找</h4><figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">(1)根据Bean名称(id/name)查找</span>	 <span class="string">--实时查找;     --延迟查找(和延迟加载Bean不是一回事)</span></span><br><span class="line"><span class="meta">(2)根据Bean类型查找</span> 	 		<span class="string">--单个Bean对象; --集合Bean对象</span></span><br><span class="line"><span class="attr">(3)根据Bean名称+类型查找</span></span><br><span class="line"><span class="meta">(4)根据Java注解查找</span> 	  		<span class="string">--单个Bean对象; --集合Bean对象</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="一：按照名称依赖查找之实时查找"><a href="#一：按照名称依赖查找之实时查找" class="headerlink" title="一：按照名称依赖查找之实时查找"></a>一：按照名称依赖查找之实时查找</h3><h4 id="试一下使用xml按照id来加载配置文件进行依赖查找"><a href="#试一下使用xml按照id来加载配置文件进行依赖查找" class="headerlink" title="试一下使用xml按照id来加载配置文件进行依赖查找"></a>试一下使用xml按照id来加载配置文件进行依赖查找</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 实体类</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">User</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> Long id;</span><br><span class="line">    <span class="keyword">private</span> String name;</span><br><span class="line">	<span class="comment">// getter() + setter() + toString()</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- XML配置文件中对于bean的配置 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"user"</span> <span class="attr">class</span>=<span class="string">"org.geekbang.thinking.in.spring.ioc.overview.domain.User"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"id"</span> <span class="attr">value</span>=<span class="string">"1"</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"name"</span> <span class="attr">value</span>=<span class="string">"Agony"</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>测试类查看依赖查找的结果</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DependencyLookupDemo</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 配置XML配置文件; 启动Spring应用上下文</span></span><br><span class="line">        BeanFactory beanFactory = <span class="keyword">new</span> ClassPathXmlApplicationContext(<span class="string">"META-INF/dependency-lookup-context.xml"</span>);</span><br><span class="line">        User user = beanFactory.getBean(<span class="string">"user"</span>, User<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line">        System.out.println(user);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">/** 输出:	User&#123;id=1, name='Agony'&#125;  */</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="二：按照名称依赖查找之延迟查找"><a href="#二：按照名称依赖查找之延迟查找" class="headerlink" title="二：按照名称依赖查找之延迟查找"></a>二：按照名称依赖查找之延迟查找</h3><h4 id="依赖ObjectFactory"><a href="#依赖ObjectFactory" class="headerlink" title="依赖ObjectFactory"></a>依赖ObjectFactory</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 首先看一下他需要依赖哪个接口</span></span><br><span class="line"><span class="comment">/** <span class="doctag">@see</span> FactoryBean</span></span><br><span class="line"><span class="comment">*  他只是一个接口,我们如何使用这个接口呢,他有一个FactoryBean的实现我们来看看</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="meta">@FunctionalInterface</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ObjectFactory</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line">    <span class="comment">// 如果不加泛型的话,objectFactory.getObject()返回就是Object类型</span></span><br><span class="line">	<span class="function">T <span class="title">getObject</span><span class="params">()</span> <span class="keyword">throws</span> BeansException</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="ObjectFactoryCreatingFactoryBean"><a href="#ObjectFactoryCreatingFactoryBean" class="headerlink" title="ObjectFactoryCreatingFactoryBean"></a>ObjectFactoryCreatingFactoryBean</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ObjectFactoryCreatingFactoryBean</span> <span class="keyword">extends</span> <span class="title">AbstractFactoryBean</span>&lt;<span class="title">ObjectFactory</span>&lt;<span class="title">Object</span>&gt;&gt; </span>&#123;</span><br><span class="line">	<span class="comment">// 这个属性就是说他需要关联一个Bean的方式</span></span><br><span class="line">	<span class="keyword">private</span> String targetBeanName;	</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="那我们再xml中关联一下"><a href="#那我们再xml中关联一下" class="headerlink" title="那我们再xml中关联一下"></a>那我们再xml中关联一下</h4><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"objectFactory"</span> <span class="attr">class</span>=<span class="string">"org.springframework.beans.factory.config.ObjectFactoryCreatingFactoryBean"</span>&gt;</span></span><br><span class="line">    <span class="comment">&lt;!-- 将id为"user"的这个Bean进行关联 --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"targetBeanName"</span> <span class="attr">value</span>=<span class="string">"user"</span>&gt;</span><span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>这样看起来就清楚了，objectFactory可以帮助我们间接的去获取targetBeanName，也就是说当我得到objectFactory的时候，并不是马上去初始化或者马上去get这个Bean</strong></p>
+<h4 id="我们将main方法重构一下"><a href="#我们将main方法重构一下" class="headerlink" title="我们将main方法重构一下"></a>我们将main方法重构一下</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DependencyLookupDemo</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 配置XML配置文件; 启动Spring应用上下文</span></span><br><span class="line">        BeanFactory beanFactory = <span class="keyword">new</span> ClassPathXmlApplicationContext(<span class="string">"META-INF/dependency-lookup-context.xml"</span>);</span><br><span class="line">        lookupInRealTime(beanFactory);</span><br><span class="line">        lookupInLazy(beanFactory);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/** 重构实时查找 */</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">lookupInRealTime</span><span class="params">(BeanFactory beanFactory)</span></span>&#123;</span><br><span class="line">        User user = beanFactory.getBean(<span class="string">"user"</span>,User<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line">        System.out.println(<span class="string">"实时查找："</span>+user);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/** 重构延迟查找 */</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">lookupInLazy</span><span class="params">(BeanFactory beanFactory)</span> </span>&#123;</span><br><span class="line">        ObjectFactory&lt;User&gt; objectFactory = (ObjectFactory&lt;User&gt;) beanFactory.getBean(<span class="string">"objectFactory"</span>);</span><br><span class="line">        <span class="comment">// 如果不加泛型的话,返回就是Object</span></span><br><span class="line">        User user = objectFactory.getObject();</span><br><span class="line">        System.out.println(<span class="string">"延迟查找："</span>+user);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 实时查找：User&#123;id=1, name='Agony'&#125;</span></span><br><span class="line"><span class="comment">// 延迟查找：User&#123;id=1, name='Agony'&#125;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="三：按照类型依赖查找单个Bean对象"><a href="#三：按照类型依赖查找单个Bean对象" class="headerlink" title="三：按照类型依赖查找单个Bean对象"></a>三：按照类型依赖查找单个Bean对象</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** 按照类型查找的单一对象---单一接口 */</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">lookupByType</span><span class="params">(BeanFactory beanFactory)</span> </span>&#123;</span><br><span class="line">    User user = beanFactory.getBean(User<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line">    System.out.println(<span class="string">"按照类型实时查找："</span>+user);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="四：按照类型依赖查找集合对象"><a href="#四：按照类型依赖查找集合对象" class="headerlink" title="四：按照类型依赖查找集合对象"></a>四：按照类型依赖查找集合对象</h3><h4 id="认识新工厂接口–ListableBeanFactory"><a href="#认识新工厂接口–ListableBeanFactory" class="headerlink" title="认识新工厂接口–ListableBeanFactory"></a>认识新工厂接口–ListableBeanFactory</h4><figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">ListableBeanFactory</span> <span class="string">是对 BeanFactory 接口的扩展,和 BeanFactory 每次获取单个 bean 不同, ListableBeanFactory 可以一次性枚举出符合条件的 bean, 如果这个 BeanFactory 继承了 HierarchicalBeanFactory, ListableBeanFactory 接口面列出的 bean 不会列出祖先 BeanFactory 中的 bean, 并且会忽略通过其他方式注册的任何单例 bean, 如 ConfigurableBeanFactory 的 registerSingleton 方法, 但 getBeanNamesOfType 和 getBeansOfType 除外, 源码如下:</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ListableBeanFactory</span> <span class="keyword">extends</span> <span class="title">BeanFactory</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 当前容器是否包含指定名称 bean</span></span><br><span class="line">    <span class="function"><span class="keyword">boolean</span> <span class="title">containsBeanDefinition</span><span class="params">(String beanName)</span></span>;</span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 当前容器注册的 bean 的数量</span></span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">getBeanDefinitionCount</span><span class="params">()</span></span>;</span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 返回容器中注册的全部 bean 的名称</span></span><br><span class="line">    String[] getBeanDefinitionNames();</span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 获取指定类型 (包括其子类) bean 的名称</span></span><br><span class="line">    <span class="comment">// includeNonSingletons: 是否包含原型或范围Bean或仅包含单例</span></span><br><span class="line">    <span class="comment">// allowEagerInit: 是否初始化lazy-init单例和由FactoryBeans(或包含"factory-bean"引用的工厂方法)创建的对象以进行类型检查.</span></span><br><span class="line">    <span class="comment">//请注意,需要积极初始化FactoryBeans以确定其类型!请注意,将"true"传递给此标志会初始化FactoryBeans和"factory-bean"引用</span></span><br><span class="line">    String[] getBeanNamesForType(ResolvableType type);</span><br><span class="line">    String[] getBeanNamesForType(<span class="meta">@Nullable</span> Class&lt;?&gt; type);</span><br><span class="line">    String[] getBeanNamesForType(<span class="meta">@Nullable</span> Class&lt;?&gt; type,</span><br><span class="line">                               <span class="keyword">boolean</span> includeNonSingletons,</span><br><span class="line">                               <span class="keyword">boolean</span> allowEagerInit);</span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 获取指定类型的bean,符合条件的bean存放在一个map中</span></span><br><span class="line">    <span class="comment">// 这个map的key值为bean的名称, value为对应的实例</span></span><br><span class="line">    &lt;T&gt; <span class="function">Map&lt;String, T&gt; <span class="title">getBeansOfType</span><span class="params">(@Nullable Class&lt;T&gt; type)</span> <span class="keyword">throws</span> BeansException</span>;</span><br><span class="line">    &lt;T&gt; <span class="function">Map&lt;String, T&gt; <span class="title">getBeansOfType</span><span class="params">(@Nullable Class&lt;T&gt; type,</span></span></span><br><span class="line"><span class="function"><span class="params">                                    <span class="keyword">boolean</span> includeNonSingletons,</span></span></span><br><span class="line"><span class="function"><span class="params">                                    <span class="keyword">boolean</span> allowEagerInit)</span> <span class="keyword">throws</span> BeansException</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 获取使用了指定注解的bean的名称</span></span><br><span class="line">    String[] getBeanNamesForAnnotation(Class&lt;? extends Annotation&gt; annotationType);</span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 获取使用了指定注解的bean, 符合条件的bean存放在一个map中</span></span><br><span class="line">    <span class="function">Map&lt;String, Object&gt; <span class="title">getBeansWithAnnotation</span><span class="params">(Class&lt;? extends Annotation&gt; annotationType)</span></span></span><br><span class="line"><span class="function">    <span class="keyword">throws</span> BeansException</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 或者指定bean的注解信息</span></span><br><span class="line">    <span class="meta">@Nullable</span></span><br><span class="line">    &lt;A extends Annotation&gt; <span class="function">A <span class="title">findAnnotationOnBean</span><span class="params">(String beanName, Class&lt;A&gt; annotationType)</span></span></span><br><span class="line"><span class="function">            <span class="keyword">throws</span> NoSuchBeanDefinitionException</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="编写测试代码"><a href="#编写测试代码" class="headerlink" title="编写测试代码"></a>编写测试代码</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**按照类型查找集合对象---集合接口*/</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">lookupByCollectionType</span><span class="params">(BeanFactory beanFactory)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(beanFactory <span class="keyword">instanceof</span> ListableBeanFactory)&#123;</span><br><span class="line">        ListableBeanFactory listableBeanFactory = (ListableBeanFactory) beanFactory;</span><br><span class="line">        Map&lt;String, User&gt; users = listableBeanFactory.getBeansOfType(User<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line">        System.out.println(<span class="string">"查找所有的user集合对象"</span>+users);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 输出: 查找所有的user集合对象&#123;user=User&#123;id=1, name='Agony'&#125;&#125;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="根据注解方式依赖查找"><a href="#根据注解方式依赖查找" class="headerlink" title="根据注解方式依赖查找"></a>根据注解方式依赖查找</h3><h4 id="我们先通过-Component来看看注解什么样"><a href="#我们先通过-Component来看看注解什么样" class="headerlink" title="我们先通过@Component来看看注解什么样"></a>我们先通过@Component来看看注解什么样</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Target</span>(ElementType.TYPE)	<span class="comment">//注解的标记范围：可以标记在什么上</span></span><br><span class="line"><span class="comment">//注解不仅被保存到class文件中,jvm加载class文件之后,仍然存在</span></span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="comment">//@Documented 注解表明这个注解应该被 javadoc工具记录. 默认情况下,javadoc是不包括注解的. </span></span><br><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="comment">//对于使用了模式注解的类上加上@Indexed注解,它可以为Spring的模式注解添加索引,以提升应用启动性能。使用了@Indexed之后，编译打包的时候会在项目中自动生成META-INT/spring.components文件。</span></span><br><span class="line"><span class="comment">//当Spring应用上下文执行ComponentScan扫描时，META-INT/spring.components将会被CandidateComponentsIndexLoader 读取并加载，转换为CandidateComponentsIndex对象，这样的话@ComponentScan不在扫描指定的package，而是读取CandidateComponentsIndex对象，从而达到提升性能的目的</span></span><br><span class="line"><span class="meta">@Indexed</span>				   </span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> Component &#123;</span><br><span class="line">	<span class="function">String <span class="title">value</span><span class="params">()</span> <span class="keyword">default</span> ""</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="我们自己写一个Super注解"><a href="#我们自己写一个Super注解" class="headerlink" title="我们自己写一个Super注解"></a>我们自己写一个Super注解</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//这样Super就可以作为一个注解使用了</span></span><br><span class="line"><span class="meta">@Target</span>(ElementType.TYPE)</span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> Super &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="我们写一个SuperUser类就可以使用-Super注解了"><a href="#我们写一个SuperUser类就可以使用-Super注解了" class="headerlink" title="我们写一个SuperUser类就可以使用@Super注解了"></a>我们写一个SuperUser类就可以使用@Super注解了</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//明显：User类没有使用注解，SuperUser类使用了注解</span></span><br><span class="line"><span class="comment">//我们对比着看看注解依赖查找怎么用</span></span><br><span class="line"><span class="meta">@Super</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SuperUser</span> <span class="keyword">extends</span> <span class="title">User</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> String address;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getAddress</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> address;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setAddress</span><span class="params">(String address)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.address = address;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">toString</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">"SuperUser&#123;"</span> +</span><br><span class="line">                <span class="string">"address='"</span> + address + <span class="string">'\''</span> +</span><br><span class="line">                <span class="string">"&#125; "</span> + <span class="keyword">super</span>.toString();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="我们先到XML文件中添加SuperUser的配置信息"><a href="#我们先到XML文件中添加SuperUser的配置信息" class="headerlink" title="我们先到XML文件中添加SuperUser的配置信息"></a>我们先到XML文件中添加SuperUser的配置信息</h4><p><strong>在通过注解方式依赖查找之前，我们先用XML查找一下SuperUser</strong></p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- 指定parent 继承user这个Bean的信息 --&gt;</span></span><br><span class="line"><span class="comment">&lt;!-- 指定primary表示主要,因为当使用类型注入的时候,SuperUser依然是User,不能唯一匹配就会报错 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"superUser"</span> <span class="attr">class</span>=<span class="string">"org.geekbang.thinking.in.spring.ioc.overview.domain.SuperUser"</span></span></span><br><span class="line"><span class="tag">      <span class="attr">parent</span>=<span class="string">"user"</span> <span class="attr">primary</span>=<span class="string">"true"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"address"</span> <span class="attr">value</span>=<span class="string">"西安"</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="我们再来看看main方法的输出"><a href="#我们再来看看main方法的输出" class="headerlink" title="我们再来看看main方法的输出"></a>我们再来看看main方法的输出</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DependencyLookupDemo</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 配置XML配置文件; 启动Spring应用上下文</span></span><br><span class="line">        BeanFactory beanFactory = <span class="keyword">new</span> ClassPathXmlApplicationContext(<span class="string">"META-INF/dependency-lookup-context.xml"</span>);</span><br><span class="line">        <span class="comment">// 输出---实时查找：User&#123;id=1, name='Agony'&#125;</span></span><br><span class="line">        lookupInRealTime(beanFactory);</span><br><span class="line">        <span class="comment">// 输出---延迟查找：User&#123;id=1, name='Agony'&#125;</span></span><br><span class="line">        lookupInLazy(beanFactory);</span><br><span class="line">        <span class="comment">// 输出---按照类型实时查找：SuperUser&#123;address='西安'&#125; User&#123;id=1, name='Agony'&#125;</span></span><br><span class="line">        lookupByType(beanFactory);</span><br><span class="line">        <span class="comment">// 输出---&#123;user=User&#123;id=1, name='Agony'&#125;, superUser=SuperUser&#123;address='西安'&#125; User&#123;id=1, name='Agony'&#125;&#125;</span></span><br><span class="line">		lookupByCollectionType(beanFactory);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/** 按照类型查找集合对象---集合接口 */</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">lookupByCollectionType</span><span class="params">(BeanFactory beanFactory)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(beanFactory <span class="keyword">instanceof</span> ListableBeanFactory)&#123;</span><br><span class="line">            ListableBeanFactory listableBeanFactory = (ListableBeanFactory) beanFactory;</span><br><span class="line">            Map&lt;String, User&gt; users = listableBeanFactory.getBeansOfType(User<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line">            System.out.println(<span class="string">"查找所有的user集合对象"</span>+users);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/** 按照类型查找的单一对象---单一接口 */</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">lookupByType</span><span class="params">(BeanFactory beanFactory)</span> </span>&#123;</span><br><span class="line">        User user = beanFactory.getBean(User<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line">        System.out.println(<span class="string">"按照类型实时查找："</span>+user);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/** 按照名称实时查找 */</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">lookupInRealTime</span><span class="params">(BeanFactory beanFactory)</span></span>&#123;</span><br><span class="line">        User user = beanFactory.getBean(<span class="string">"user"</span>,User<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line">        System.out.println(<span class="string">"实时查找："</span>+user);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/** 按照名称延迟查找 **/</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">lookupInLazy</span><span class="params">(BeanFactory beanFactory)</span> </span>&#123;</span><br><span class="line">        ObjectFactory&lt;User&gt; objectFactory = (ObjectFactory&lt;User&gt;) beanFactory.getBean(<span class="string">"objectFactory"</span>);</span><br><span class="line">        <span class="comment">// 如果不加泛型的话,返回就是Object</span></span><br><span class="line">        User user = objectFactory.getObject();</span><br><span class="line">        System.out.println(<span class="string">"延迟查找："</span>+user);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="输出正常，我们再看看通过注解的方式来进行依赖查找"><a href="#输出正常，我们再看看通过注解的方式来进行依赖查找" class="headerlink" title="输出正常，我们再看看通过注解的方式来进行依赖查找"></a>输出正常，我们再看看通过注解的方式来进行依赖查找</h4><p><strong>其实通过注解他也是一个集合类型，那我们就再来看看ListableBeanFactory有没有为我们提供根据注解返回指定Bean的方法——-显然有，只能说很幸福</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ListableBeanFactory</span> <span class="keyword">extends</span> <span class="title">BeanFactory</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 获取使用了指定注解的bean的名称</span></span><br><span class="line">    String[] getBeanNamesForAnnotation(Class&lt;? extends Annotation&gt; annotationType);</span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 获取使用了指定注解的bean, 符合条件的bean存放在一个map中</span></span><br><span class="line">    <span class="function">Map&lt;String, Object&gt; <span class="title">getBeansWithAnnotation</span><span class="params">(Class&lt;? extends Annotation&gt; annotationType)</span></span></span><br><span class="line"><span class="function">    <span class="keyword">throws</span> BeansException</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 或者指定bean的注解信息</span></span><br><span class="line">    <span class="meta">@Nullable</span></span><br><span class="line">    &lt;A extends Annotation&gt; <span class="function">A <span class="title">findAnnotationOnBean</span><span class="params">(String beanName, Class&lt;A&gt; annotationType)</span></span></span><br><span class="line"><span class="function">            <span class="keyword">throws</span> NoSuchBeanDefinitionException</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="这样好办了，我们写一个方法来看看"><a href="#这样好办了，我们写一个方法来看看" class="headerlink" title="这样好办了，我们写一个方法来看看"></a>这样好办了，我们写一个方法来看看</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** 通过注解方式进行依赖查找 */</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">lookupByAnnotationType</span><span class="params">(BeanFactory beanFactory)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(beanFactory <span class="keyword">instanceof</span>  ListableBeanFactory)&#123;</span><br><span class="line">        ListableBeanFactory listableBeanFactory = (ListableBeanFactory) beanFactory;</span><br><span class="line">        <span class="comment">//强制类型转换成map,不然返回结果会是Map&lt;String , Object&gt;</span></span><br><span class="line">        Map&lt;String, User&gt; users = (Map) listableBeanFactory.getBeansWithAnnotation(Super<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line">        System.out.println(<span class="string">"查找标注了@Super注解的User集合对象"</span> + users);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//输出结果: 查找标注了@Super注解的User集合对象&#123;superUser=SuperUser&#123;address='西安'&#125; User&#123;id=1, name='Agony'&#125;&#125;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="结果分析"><a href="#结果分析" class="headerlink" title="结果分析"></a>结果分析</h4><p><strong>当我们没有加注解的时候，集合对象是两个，User和SuperUser，添加了自定义@Super注解之后，结果上集合对象就只剩下了SuperUser，说明什么？其实Spring底层他做了一层过滤，到底做了什么过滤，我还没看懂，我看了更新</strong></p>
+
+    </div>
+
+    
+    
+    
+      
+        <div class="reward-container">
+  <div>爱？就供养！打赏呗！</div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="Agonywy 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="Agonywy 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Agonywy
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://agonywy.github.io/2020/10/13/2020-10-13-%E9%87%8D%E6%96%B0%E8%AE%A4%E8%AF%86IOC(%E4%BA%8C)/" title="Spring IOC依赖查找">https://agonywy.github.io/2020/10/13/2020-10-13-%E9%87%8D%E6%96%B0%E8%AE%A4%E8%AF%86IOC(%E4%BA%8C)/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="noopener" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+	 <div>
+		
+		<div>
+    
+        <div style="text-align:center;color: #ccc;font-size:14px;">-------------本文结束<i class="fa fa-paw"></i>感谢您的阅读-------------</div>
+    
+</div>
+		
+	</div>
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/think-in-spring/" rel="tag"># think-in-spring</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/2020/10/11/2020-10-11-IOC%E5%9F%BA%E6%9C%AC%E5%AE%9E%E7%8E%B0--JavaBeans/" rel="next" title="重新认识IOC">
+                  <i class="fa fa-chevron-left"></i> 重新认识IOC
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/2020/10/13/2020-10-13-Spring%20IOC%E4%BE%9D%E8%B5%96%E6%9F%A5%E6%89%BE/" rel="prev" title="Spring IOC依赖查找">
+                  Spring IOC依赖查找 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    
+  <div class="comments" id="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC80NzE1Mi8yMzY1Mg=="></div>
+  </div>
+  
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#Spring-IOC"><span class="nav-number">1.</span> <span class="nav-text">Spring IOC</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Spring-IOC依赖查找"><span class="nav-number">2.</span> <span class="nav-text">Spring IOC依赖查找</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#一：按照名称依赖查找之实时查找"><span class="nav-number"></span> <span class="nav-text">一：按照名称依赖查找之实时查找</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#试一下使用xml按照id来加载配置文件进行依赖查找"><span class="nav-number">1.</span> <span class="nav-text">试一下使用xml按照id来加载配置文件进行依赖查找</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#二：按照名称依赖查找之延迟查找"><span class="nav-number"></span> <span class="nav-text">二：按照名称依赖查找之延迟查找</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#依赖ObjectFactory"><span class="nav-number">1.</span> <span class="nav-text">依赖ObjectFactory</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ObjectFactoryCreatingFactoryBean"><span class="nav-number">2.</span> <span class="nav-text">ObjectFactoryCreatingFactoryBean</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#那我们再xml中关联一下"><span class="nav-number">3.</span> <span class="nav-text">那我们再xml中关联一下</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#我们将main方法重构一下"><span class="nav-number">4.</span> <span class="nav-text">我们将main方法重构一下</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#三：按照类型依赖查找单个Bean对象"><span class="nav-number"></span> <span class="nav-text">三：按照类型依赖查找单个Bean对象</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#四：按照类型依赖查找集合对象"><span class="nav-number"></span> <span class="nav-text">四：按照类型依赖查找集合对象</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#认识新工厂接口–ListableBeanFactory"><span class="nav-number">1.</span> <span class="nav-text">认识新工厂接口–ListableBeanFactory</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#编写测试代码"><span class="nav-number">2.</span> <span class="nav-text">编写测试代码</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#根据注解方式依赖查找"><span class="nav-number"></span> <span class="nav-text">根据注解方式依赖查找</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#我们先通过-Component来看看注解什么样"><span class="nav-number">1.</span> <span class="nav-text">我们先通过@Component来看看注解什么样</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#我们自己写一个Super注解"><span class="nav-number">2.</span> <span class="nav-text">我们自己写一个Super注解</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#我们写一个SuperUser类就可以使用-Super注解了"><span class="nav-number">3.</span> <span class="nav-text">我们写一个SuperUser类就可以使用@Super注解了</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#我们先到XML文件中添加SuperUser的配置信息"><span class="nav-number">4.</span> <span class="nav-text">我们先到XML文件中添加SuperUser的配置信息</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#我们再来看看main方法的输出"><span class="nav-number">5.</span> <span class="nav-text">我们再来看看main方法的输出</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#输出正常，我们再看看通过注解的方式来进行依赖查找"><span class="nav-number">6.</span> <span class="nav-text">输出正常，我们再看看通过注解的方式来进行依赖查找</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#这样好办了，我们写一个方法来看看"><span class="nav-number">7.</span> <span class="nav-text">这样好办了，我们写一个方法来看看</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#结果分析"><span class="nav-number">8.</span> <span class="nav-text">结果分析</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Agonywy"
+    src="https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=990876467,425290997&fm=26&gp=0.jpg">
+  <p class="site-author-name" itemprop="name">Agonywy</p>
+  <div class="site-description" itemprop="description">我爱你,因为你是你，我爱你如你所是</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">35</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">15</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Agonywy" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;Agonywy" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://tech.meituan.com/" title="https:&#x2F;&#x2F;tech.meituan.com&#x2F;" rel="noopener" target="_blank">硬核_美团技术</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.javacoder.cn/" title="http:&#x2F;&#x2F;www.javacoder.cn&#x2F;" rel="noopener" target="_blank">软核_知行合一</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Agonywy</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">146k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">2:13</span>
+</div>
+
+<!--
+<div class="powered-by">
+<i class="fa fa-user-md"></i>
+
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v4.2.1
+  </div>
+  <span class="post-meta-divider">|</span>
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.4.1
+  </div>
+-->
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  
+  <script color='0,0,255' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+<script src="/js/utils.js?v=7.4.1.js"></script>
+
+<script src="/js/motion.js?v=7.4.1.js"></script>
+
+
+<script src="/js/schemes/pisces.js?v=7.4.1.js"></script>
+
+
+<script src="/js/next-boot.js?v=7.4.1.js"></script>
+
+
+  <script defer src="/lib/three/three.min.js"></script>
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+
+
+  
+<script src="/js/local-search.js?v=7.4.1.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+
+
+  
+</body>
+</html>
+<!-- 页面点击小红心 -->
+  <script type="text/javascript" src="/js/clicklove.js"></script>
+
