@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.1">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.4.1">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.4.1">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.1" color="#222">
+  <link rel="alternate" href="/atom.xml" title="如你所是" type="application/atom+xml">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.1">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.4.1',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="依赖来源之前我们发现依赖来源并不是都来自我们自定义的bean，那么还有一部分来自于其他地方，那么所谓的那些地方到底是在什么地方呢？这一篇文章就是进行一个初步的讨论。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="From依赖来源To配置元信息">
+<meta property="og:url" content="https://agonywy.github.io/2020/10/16/2020-10-16-From%E4%BE%9D%E8%B5%96%E6%9D%A5%E6%BA%90To%E9%85%8D%E7%BD%AE%E5%85%83%E4%BF%A1%E6%81%AF/index.html">
+<meta property="og:site_name" content="如你所是">
+<meta property="og:description" content="依赖来源之前我们发现依赖来源并不是都来自我们自定义的bean，那么还有一部分来自于其他地方，那么所谓的那些地方到底是在什么地方呢？这一篇文章就是进行一个初步的讨论。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-10-16T08:42:35.000Z">
+<meta property="article:modified_time" content="2020-10-16T09:44:02.709Z">
+<meta property="article:author" content="Agonywy">
+<meta property="article:tag" content="think-in-spring">
+<meta name="twitter:card" content="summary">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>From依赖来源To配置元信息 | 如你所是</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+  
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">如你所是</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Agonywy</p>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/Agonywy" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://Agonywy.github.io/2020/10/16/2020-10-16-From%E4%BE%9D%E8%B5%96%E6%9D%A5%E6%BA%90To%E9%85%8D%E7%BD%AE%E5%85%83%E4%BF%A1%E6%81%AF/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=990876467,425290997&fm=26&gp=0.jpg">
+      <meta itemprop="name" content="Agonywy">
+      <meta itemprop="description" content="我爱你,因为你是你，我爱你如你所是">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="如你所是">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          From依赖来源To配置元信息
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-10-16 16:42:35" itemprop="dateCreated datePublished" datetime="2020-10-16T16:42:35+08:00">2020-10-16</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/think-in-spring/" itemprop="url" rel="index">
+                    <span itemprop="name">think-in-spring</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3.4k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="依赖来源"><a href="#依赖来源" class="headerlink" title="依赖来源"></a>依赖来源</h3><p>之前我们发现依赖来源并不是都来自我们自定义的bean，那么还有一部分来自于其他地方，那么所谓的那些地方到底是在什么地方呢？这一篇文章就是进行一个初步的讨论。</p><a id="more"></a>
+<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">我们之前在依赖查找和依赖注入的时候，我们都看到了一些bean的定义，这些Bean的定义他仅仅</span></span><br><span class="line"><span class="attr">局限于我们的XML文件，其实还有更多的Bean的定义会在后面的配置源信息来进行分享</span></span><br><span class="line"><span class="meta">(1)自定义的bean</span>:<span class="string"></span></span><br><span class="line"><span class="attr">我们知道第一方面他的Bean是来自于自定义的Bean，就是我们业务的上面的Bean</span></span><br><span class="line"><span class="meta">(2)容器内建的Bean对象</span>:<span class="string"></span></span><br><span class="line"><span class="attr">第二方面是它来自于容器内部的一些Bean对象，那么这个部分我们要去怎么呈现呢？</span></span><br><span class="line"><span class="attr">比如说我们之前所看到的BeanFactory对象，到底是不是内建的Bean对象呢</span></span><br><span class="line"><span class="attr">显然答案是否定的，如果是的话，那么完全可以通过getBean的方式，通过类型的方式查出来</span></span><br><span class="line"><span class="attr">然而报错了肯定并不是内建Bean对象了，那么这个东西到底是什么？</span></span><br><span class="line"><span class="meta">(3)容器内建依赖</span>:<span class="string"></span></span><br><span class="line"><span class="attr">其实我们之前所看到的BeanFactory对象是容器内建的一些依赖，他就是非SpringBean</span></span><br></pre></td></tr></table></figure>
+
+<p>就是说依赖可以大致分为两大类：第一种是普通的Bean，第二种方式是非Bean，这里怎么理解呀，没关系我们可以用案例去分析一下，但是首先我们还是要去了解一下什么是内建的Bean对象？</p>
+<h3 id="容器内建的Bean"><a href="#容器内建的Bean" class="headerlink" title="容器内建的Bean"></a>容器内建的Bean</h3><figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">所谓的容器内建的Bean，那么这个不是我们自己业务方或者我们自己的应用来帮我构建的，而是内部他自己建的，那么是什么地方呢？我们这里可以随便举个例子</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="Environment"><a href="#Environment" class="headerlink" title="Environment"></a>Environment</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Environment</span> <span class="keyword">extends</span> <span class="title">PropertyResolver</span> </span>&#123;&#125;</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* 这个Environment抽象，这个是外部化配置和profile的一个综合体</span></span><br><span class="line"><span class="comment">* 因此我们通过getBean的方法去找，我们看会不会报错</span></span><br><span class="line"><span class="comment">*/</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="验证一些结果"><a href="#验证一些结果" class="headerlink" title="验证一些结果"></a>验证一些结果</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DependencyInjectionDemo</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 配置 XML 配置文件</span></span><br><span class="line">        <span class="comment">// 启动 Spring 应用上下文</span></span><br><span class="line">        BeanFactory beanFactory = <span class="keyword">new</span> ClassPathXmlApplicationContext(<span class="string">"classpath:/META-INF/dependency-injection-context.xml"</span>);</span><br><span class="line">        Environment environment = beanFactory.getBean(Environment<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line">        System.out.println(environment);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//输出结果: StandardEnvironment &#123;activeProfiles=[], defaultProfiles=[default], propertySources=[PropertiesPropertySource &#123;name='systemProperties'&#125;, SystemEnvironmentPropertySource &#123;name='systemEnvironment'&#125;]&#125;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="分析结果"><a href="#分析结果" class="headerlink" title="分析结果"></a>分析结果</h4><figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">结果显然我们获取到了这个Bean，那么我们压根没有定义这个Bean呀，他是怎么获取到的呢？</span></span><br><span class="line"><span class="attr">其实就是内部给我们默认初始化了一些Bean，那么看出来获取Environment类型的Bean他等于什么</span></span><br><span class="line"><span class="attr">StandardEnvironment</span>: <span class="string">activeProfiles,defaultProfiles,propertySources</span></span><br><span class="line"><span class="attr">这些东西我们后面在Environment抽象的章节中可以单独讨论一下，因为实在有点复杂</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="我们把示例代码整合一下看看"><a href="#我们把示例代码整合一下看看" class="headerlink" title="我们把示例代码整合一下看看"></a>我们把示例代码整合一下看看</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DependencyInjectionDemo</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 配置 XML 配置文件</span></span><br><span class="line">        <span class="comment">// 启动 Spring 应用上下文</span></span><br><span class="line">        BeanFactory beanFactory = <span class="keyword">new</span> ClassPathXmlApplicationContext(<span class="string">"classpath:/META-INF/dependency-injection-context.xml"</span>);</span><br><span class="line">        <span class="comment">/**1.....自定义的Bean*/</span></span><br><span class="line">        UserRepository userRepository = beanFactory.getBean(<span class="string">"userRepository"</span>, UserRepository<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line">      	System.out.println(userRepository);</span><br><span class="line">        <span class="comment">/**2......内建依赖*/</span></span><br><span class="line">        System.out.println(userRepository.getBeanFactory());</span><br><span class="line">        <span class="comment">/** 依赖查找：下面这句代码就有问题:因为他不是一个内置非bean对象不能这样用</span></span><br><span class="line"><span class="comment">         *  其实他是一个容器内建依赖</span></span><br><span class="line"><span class="comment">         *  System.out.println(beanFactory.getBean(BeanFactory.class));</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="comment">/**3......容器内建Bean*/</span></span><br><span class="line">        Environment environment = beanFactory.getBean(Environment<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line">        System.out.println(environment);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="输出结果"><a href="#输出结果" class="headerlink" title="输出结果"></a>输出结果</h4><figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">自定义的Bean</span>:<span class="string">org.geekbang.thinking.in.spring.ioc.overview.repository.UserRepository@4e7dc304</span></span><br><span class="line"><span class="meta">内建依赖</span>:<span class="string">org.springframework.beans.factory.support.DefaultListableBeanFactory@3b81a1bc: defining beans [user,objectFactory,superUser,userRepository]; root of factory hierarchy</span></span><br><span class="line"><span class="meta">容器内建Bean</span>:<span class="string">StandardEnvironment &#123;activeProfiles=[], defaultProfiles=[default], propertySources=[PropertiesPropertySource &#123;name='systemProperties'&#125;, SystemEnvironmentPropertySource &#123;name='systemEnvironment'&#125;]&#125;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="引入新问题？"><a href="#引入新问题？" class="headerlink" title="引入新问题？"></a>引入新问题？</h4><p><strong>从依赖来源又引出了一个非常重要的议题，就是这些Bean的来源是来自于配置，那么配置又称为什么，称为我们说的配置元信息，这就是我们接下来要讨论的</strong></p>
+<h3 id="配制元信息"><a href="#配制元信息" class="headerlink" title="配制元信息"></a>配制元信息</h3><figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">我们已经知道了依赖查找，依赖注入以及依赖的来源，那么这些其实都隐藏了一个问题，就是注入和配置到底是从哪里来的呢？我们能不能通过配置的方式去影响容器的行为，答案是肯定的！</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="相关的IOC配置元信息的一些基本的要素"><a href="#相关的IOC配置元信息的一些基本的要素" class="headerlink" title="相关的IOC配置元信息的一些基本的要素"></a>相关的IOC配置元信息的一些基本的要素</h4><figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">配置元信息</span>:<span class="string">其实配置元信息一个是分为你自己的Bean，那么这个Bean通常来说就是你业务要进行感知的，那么IOC容器配置呢主要是对IOC容器做一个控制，那么这个通常来说是非核心的，非功能性的一些特性，就是说这个东西不会影响到你的功能行为，又不会影响到你的业务行为。外部化配置属性，其实比如说我们在@Value的时候我们在Spring Boot中经常用到这个注解，这个注解其实他是外部化的一个配置元信息，那么基本上配置元信息我们可以认为他就是元编程的一部分，那么他通过这种配置的方式影响这个行为</span></span><br><span class="line"><span class="meta">Bean定义配置</span>:<span class="string">关于Bean的配置</span></span><br><span class="line">	<span class="attr">---基于xml文件</span></span><br><span class="line">	<span class="attr">---基于Properties文件</span></span><br><span class="line">	<span class="attr">---基于Java注解</span></span><br><span class="line">	<span class="meta">---基于Java</span> <span class="string">API(之后专题讨论)</span></span><br><span class="line"><span class="meta">IOC容器配置</span>:<span class="string">关于容器的配置</span></span><br><span class="line">	<span class="attr">---基于xml文件</span></span><br><span class="line">	<span class="attr">---基于Java注解</span></span><br><span class="line">	<span class="meta">---基于Java</span> <span class="string">API(之后专题讨论)</span></span><br><span class="line"><span class="meta">外部化属性配置</span>:<span class="string">外部化配置</span></span><br><span class="line">	<span class="attr">---基于Java注解</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="元信息配置"><a href="#元信息配置" class="headerlink" title="元信息配置"></a>元信息配置</h4><p>这三个配置其实在后续的工作中会经常遇到，我们放开这部分先不讨论，还有一个更重要的环节要先弄清楚，就是到底谁才是真正的IOC容器的底层。</p>
+
+    </div>
+
+    
+    
+    
+      
+        <div class="reward-container">
+  <div>爱？就供养！打赏呗！</div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="Agonywy 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="Agonywy 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Agonywy
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://agonywy.github.io/2020/10/16/2020-10-16-From%E4%BE%9D%E8%B5%96%E6%9D%A5%E6%BA%90To%E9%85%8D%E7%BD%AE%E5%85%83%E4%BF%A1%E6%81%AF/" title="From依赖来源To配置元信息">https://agonywy.github.io/2020/10/16/2020-10-16-From%E4%BE%9D%E8%B5%96%E6%9D%A5%E6%BA%90To%E9%85%8D%E7%BD%AE%E5%85%83%E4%BF%A1%E6%81%AF/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" rel="noopener" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+	 <div>
+		
+		<div>
+    
+        <div style="text-align:center;color: #ccc;font-size:14px;">-------------本文结束<i class="fa fa-paw"></i>感谢您的阅读-------------</div>
+    
+</div>
+		
+	</div>
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/think-in-spring/" rel="tag"># think-in-spring</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/2020/10/15/2020-10-15-Spring-IOC%E4%BE%9D%E8%B5%96%E6%B3%A8%E5%85%A5/" rel="next" title="Spring IOC依赖注入">
+                  <i class="fa fa-chevron-left"></i> Spring IOC依赖注入
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    
+  <div class="comments" id="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC80NzE1Mi8yMzY1Mg=="></div>
+  </div>
+  
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#依赖来源"><span class="nav-number">1.</span> <span class="nav-text">依赖来源</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#容器内建的Bean"><span class="nav-number">2.</span> <span class="nav-text">容器内建的Bean</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Environment"><span class="nav-number">2.1.</span> <span class="nav-text">Environment</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#验证一些结果"><span class="nav-number">2.2.</span> <span class="nav-text">验证一些结果</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#分析结果"><span class="nav-number">2.3.</span> <span class="nav-text">分析结果</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#我们把示例代码整合一下看看"><span class="nav-number">3.</span> <span class="nav-text">我们把示例代码整合一下看看</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#输出结果"><span class="nav-number">3.1.</span> <span class="nav-text">输出结果</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#引入新问题？"><span class="nav-number">3.2.</span> <span class="nav-text">引入新问题？</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#配制元信息"><span class="nav-number">4.</span> <span class="nav-text">配制元信息</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#相关的IOC配置元信息的一些基本的要素"><span class="nav-number">4.1.</span> <span class="nav-text">相关的IOC配置元信息的一些基本的要素</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#元信息配置"><span class="nav-number">4.2.</span> <span class="nav-text">元信息配置</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="Agonywy"
+    src="https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=990876467,425290997&fm=26&gp=0.jpg">
+  <p class="site-author-name" itemprop="name">Agonywy</p>
+  <div class="site-description" itemprop="description">我爱你,因为你是你，我爱你如你所是</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">35</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">15</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Agonywy" title="GitHub &amp;rarr; https:&#x2F;&#x2F;github.com&#x2F;Agonywy" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://tech.meituan.com/" title="https:&#x2F;&#x2F;tech.meituan.com&#x2F;" rel="noopener" target="_blank">硬核_美团技术</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.javacoder.cn/" title="http:&#x2F;&#x2F;www.javacoder.cn&#x2F;" rel="noopener" target="_blank">软核_知行合一</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Agonywy</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">148k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">2:14</span>
+</div>
+
+<!--
+<div class="powered-by">
+<i class="fa fa-user-md"></i>
+
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v4.2.1
+  </div>
+  <span class="post-meta-divider">|</span>
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.4.1
+  </div>
+-->
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  
+  <script color='0,0,255' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+<script src="/js/utils.js?v=7.4.1.js"></script>
+
+<script src="/js/motion.js?v=7.4.1.js"></script>
+
+
+<script src="/js/schemes/pisces.js?v=7.4.1.js"></script>
+
+
+<script src="/js/next-boot.js?v=7.4.1.js"></script>
+
+
+  <script defer src="/lib/three/three.min.js"></script>
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+
+
+  
+<script src="/js/local-search.js?v=7.4.1.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+
+
+  
+</body>
+</html>
+<!-- 页面点击小红心 -->
+  <script type="text/javascript" src="/js/clicklove.js"></script>
+
